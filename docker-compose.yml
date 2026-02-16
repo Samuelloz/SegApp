@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16
+    container_name: lozcorp_db
+    environment:
+      POSTGRES_USER: lozcorp
+      POSTGRES_PASSWORD: lozcorp
+      POSTGRES_DB: lozcorp
+    volumes:
+      - lozcorp_pg:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  lozcorp_pg:
