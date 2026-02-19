@@ -138,7 +138,9 @@ export default function ContractsPage() {
 
                         <div className={styles.actions}>
                             <Button variant="ghost">Ver</Button>
-                            <Button>Editar</Button>
+                            <Button>
+                                Editar
+                            </Button>
                         </div>
                     </Card>
                 ))}

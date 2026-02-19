@@ -30,4 +30,16 @@ export class GuardService {
             data: { active: !current.active }
         });
     }
+
+    async update(id: string, fullname: string, employeeNumber: string, phone: string) {
+        const current = await this.prisma.guard.findUnique({
+            where: { id },
+        });
+        if (!current) throw new Error('Guardia no Encontrado');
+
+        return this.prisma.guard.update({
+            where: { id },
+            data: { fullname, employeeNumber, phone },
+        });
+    }
 }

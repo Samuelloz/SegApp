@@ -8,13 +8,22 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import Modal from "@/components/ui/Modal";
 
-import { useCreateGuardMutation, useGetGuardsQuery, useToggleGuardMutation } from "@/store/api";
+import { useCreateGuardMutation, useGetGuardsQuery, useToggleGuardMutation, useUpdateGuardMutation } from "@/store/api";
 
 export default function GuardsPage() {
     const { data, isLoading, error} = useGetGuardsQuery();
     const [createGuard, { isLoading: isCreating }] = useCreateGuardMutation();
     const [toggleGuard, { isLoading: isToggling }] = useToggleGuardMutation();
+    const [updateGuard, { isLoading: isUpdating }] = useUpdateGuardMutation();
+    
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editId, setEditId] = useState<string | null>(null);
+    const [editFullName, setEditFullName] = useState('');
+    const [editEmployeeNumber, setEditEmployeeNumber] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editOriginal, setEditOriginal] = useState<any | null>(null);
 
     const [fullname, setFullName] = useState('');
     const [employeeNumber, setEmployeeNumber] =  useState('');
@@ -72,6 +81,65 @@ export default function GuardsPage() {
             toast.success('Estatus actualizado', { id: toastId });
         } catch (err: any) {
             toast.error(err?.data?.message ?? 'Error al actualizar guardia', { id: toastId });
+        }
+    }
+
+    function openEdit (g: any) {
+        setEditOriginal(g);
+        setEditId(g.id);
+        setEditFullName(g.fullname ?? '');
+        setEditEmployeeNumber(g.employeeNumber ?? '');
+        setEditPhone(g.phone ?? '');
+        setIsEditOpen(true);
+    }
+
+    const hasChanges = useMemo(() => {
+        if (!editOriginal) return false;
+
+        const f0 = (editOriginal.fullname ?? '').trim();
+        const e0 = (editOriginal.employeeNumber ?? '').trim();
+        const p0 = (editOriginal.phone ?? '').trim();
+
+        const f1 = editFullName.trim();
+        const e1 = editEmployeeNumber.trim();
+        const p1 = editPhone.trim();
+
+        return f0 !== f1 || e0 !== e1 || p0 !== p1;
+    }, [editOriginal, editFullName, editEmployeeNumber, editPhone]);
+
+    function closeEdit() {
+        setIsEditOpen(false);
+        setEditId(null);
+        setEditOriginal(null);
+    }
+    
+    async function onSaveEdit() {
+        if (!editId) return;
+
+        const f = editFullName.trim();
+        const e = editEmployeeNumber.trim();
+        const p = editPhone.trim();
+
+        if (!f || !e) {
+            toast.error('El nombre completo y número de empleado son obligatorios');
+            return;
+        }
+
+        const tId = toast.loading('Guardando cambios...');
+
+        try {
+            await updateGuard({
+                id: editId,
+                body: {
+                    fullname: f,
+                    employeeNumber: e,
+                    phone: p || undefined,
+                }
+            })
+            toast.success('Guardia actualizado', { id: tId});
+            closeEdit();
+        } catch (err:any) {
+            toast.error(err?.data?.message ?? 'Error al actualizar guardia', { id: tId });
         }
     }
 
@@ -184,7 +252,9 @@ export default function GuardsPage() {
                         
                         <div className={styles.actions}>
                             <Button variant="ghost">Ver</Button>
-                            <Button>Editar</Button>
+                            <Button onClick={() => openEdit(g)}>
+                                Editar
+                            </Button>
                         </div>
                     </Card>
                 ))}
@@ -194,6 +264,43 @@ export default function GuardsPage() {
                 )}
             </div>
         </section>
+        <Modal
+            open={isEditOpen}
+            title="Editar Gaurdia"
+            onClose={closeEdit}>
+            <div className={styles.formGrid}>
+                <div>
+                    <div className={styles.fieldLabel}>Nombre Completo *</div>
+                    <Input 
+                        value={editFullName}
+                        onChange={(e) => setEditFullName(e.target.value)}/>
+                </div>
+
+                <div>
+                    <div className={styles.fieldLabel}>No. Empleado *</div>
+                    <Input 
+                        value={editEmployeeNumber}
+                        onChange={(e) => setEditEmployeeNumber(e.target.value)}/>
+                </div>
+
+                <div>
+                    <div className={styles.fieldLabel}>Télefono:</div>
+                    <Input 
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}/>
+                </div>
+
+                <div className={styles.modalActions}>
+                    <Button variant="ghost" onClick={closeEdit}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={onSaveEdit} disabled={isUpdating || !hasChanges}>
+                        {isUpdating ? "Guardando..." : 'Guardar'}
+                    </Button>
+                </div>
+
+            </div>
+        </Modal>
         </>
     )
 }
