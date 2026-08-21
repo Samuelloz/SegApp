@@ -37,7 +37,7 @@ export const api = createApi({
             }),
             invalidatesTags: ['Contracts'],
         }),
-        toggleContract: builder.mutation<any, string>({
+        toggleContract: builder.mutation<Guard, string>({
             query: (id) => ({
                 url: `/contracts/${id}/toggle`,
                 method: 'PATCH',
@@ -46,7 +46,7 @@ export const api = createApi({
         }),
 
         //Guards
-        getGuards: builder.query<Guard[], void> ({
+        getGuards: builder.query<Guard[], void>({
             query: () => '/guards',
             providesTags: ['Guards'],
         }),
@@ -58,7 +58,14 @@ export const api = createApi({
             }),
             invalidatesTags: ['Guards'],
         }),
-        updateGuard: builder.mutation<any, { id: string, body: { fullname?: string, employeeNumber?: string, phone?: string } }> ({
+        updateGuard: builder.mutation<Guard, {
+            id: string;
+            body: {
+                fullname: string;
+                employeeNumber: string;
+                phone?: string;
+            };
+        }>({
             query: ({ id, body }) => ({
                 url: `/guards/${id}`,
                 method: 'PATCH',
@@ -66,7 +73,7 @@ export const api = createApi({
             }),
             invalidatesTags: ['Guards'],
         }),
-        toggleGuard: builder.mutation<any, string> ({
+        toggleGuard: builder.mutation<Guard, string>({
             query: (id) => ({
                 url: `/guards/${id}/toggle`,
                 method: 'PATCH',
@@ -76,7 +83,7 @@ export const api = createApi({
     }),
 });
 
-export const { 
+export const {
     useGetContractsQuery,
     useCreateContractMutation,
     useToggleContractMutation,

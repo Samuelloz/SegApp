@@ -15,10 +15,27 @@ export default function Navbar() {
 
     useEffect(() => {
         document.body.style.overflow = open ? 'hidden' : '';
+
         return () => {
             document.body.style.overflow = '';
         };
     }, [open]);
+
+    useEffect(() => {
+        const desktopMedia = window.matchMedia('(min-width: 981px)');
+
+        function closeOnDesktop(event: MediaQueryListEvent) {
+            if (event.matches) {
+                setOpen(false);
+            }
+        }
+
+        desktopMedia.addEventListener('change', closeOnDesktop);
+
+        return () => {
+            desktopMedia.removeEventListener('change', closeOnDesktop);
+        }
+    }, []);
 
     const isContracts = pathName?.startsWith('/contracts');
     const isGuards = pathName?.startsWith('/guards');
@@ -42,7 +59,7 @@ export default function Navbar() {
                 <button
                     type="button"
                     className={styles.burger}
-                    onClick={() => {setOpen(v => !v)}}
+                    onClick={() => { setOpen(v => !v) }}
                     aria-label='Abrir menú'
                     aria-expanded={open}>
                     <span />
@@ -52,7 +69,7 @@ export default function Navbar() {
             </div>
 
             <div className={`${styles.backdrop} ${open ? styles.backdropOpen : ''}`}
-                onClick={() => setOpen(false)}/>
+                onClick={() => setOpen(false)} />
 
             <aside className={`${styles.drawer} ${open ? styles.drawerOpen : ''}`}>
                 <div className={styles.drawerTop}>

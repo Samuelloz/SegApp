@@ -11,18 +11,19 @@ type Props = {
 };
 
 export default function Modal({ open, title, children, onClose }: Props) {
-    if (!open) return null;
-    
     useEffect(() => {
         if (!open) return;
 
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape')  onClose();
+            if (e.key === 'Escape') onClose();
         }
 
         document.addEventListener('keydown', onKeyDown);
+
         return () => document.removeEventListener('keydown', onKeyDown);
-    });
+    }, [open, onClose]);
+
+    if (!open) return null;
 
     return (
         <div className={styles.overlay} onClick={onClose}>
@@ -31,7 +32,7 @@ export default function Modal({ open, title, children, onClose }: Props) {
                     <div className={styles.title}>{title ?? 'Editar'}</div>
                     <button className={styles.close} onClick={onClose}>X</button>
                 </div>
-                
+
                 <div className={styles.content}>
                     {children}
                 </div>
