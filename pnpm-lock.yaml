@@ -4,19 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+packageExtensionsChecksum: sha256-2ACWfibwRbkAk0lVizUjmtaqaiFVIrYw7oyKiFg71eI=
+
 importers:
 
-  .:
-    dependencies:
-      '@hookform/resolvers':
-        specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.71.1(react@19.2.3))
-      react-hook-form:
-        specifier: ^7.71.1
-        version: 7.71.1(react@19.2.3)
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
+  .: {}
 
   apps/api:
     dependencies:
@@ -123,6 +115,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.71.1(react@19.2.3))(zod@4.3.6)
       '@reduxjs/toolkit':
         specifier: ^2.11.2
         version: 2.11.2(react-redux@9.2.0(@types/react@19.2.8)(react@19.2.3)(redux@5.0.1))(react@19.2.3)
@@ -135,12 +130,18 @@ importers:
       react-dom:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
+      react-hook-form:
+        specifier: ^7.71.1
+        version: 7.71.1(react@19.2.3)
       react-redux:
         specifier: ^9.2.0
         version: 9.2.0(@types/react@19.2.8)(react@19.2.3)(redux@5.0.1)
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4
@@ -463,6 +464,7 @@ packages:
     resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
     peerDependencies:
       react-hook-form: ^7.55.0
+      zod: ^3.25.0 || ^4.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -4447,9 +4449,6 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@4.3.5:
-    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
-
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
@@ -4800,10 +4799,11 @@ snapshots:
     dependencies:
       hono: 4.10.6
 
-  '@hookform/resolvers@5.2.2(react-hook-form@7.71.1(react@19.2.3))':
+  '@hookform/resolvers@5.2.2(react-hook-form@7.71.1(react@19.2.3))(zod@4.3.6)':
     dependencies:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.71.1(react@19.2.3)
+      zod: 4.3.6
 
   '@humanfs/core@0.19.1': {}
 
@@ -6829,8 +6829,8 @@ snapshots:
       '@babel/parser': 7.28.5
       eslint: 9.39.2(jiti@2.6.1)
       hermes-parser: 0.25.1
-      zod: 4.3.5
-      zod-validation-error: 4.0.2(zod@4.3.5)
+      zod: 4.3.6
+      zod-validation-error: 4.0.2(zod@4.3.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -9359,10 +9359,8 @@ snapshots:
     dependencies:
       grammex: 3.1.12
 
-  zod-validation-error@4.0.2(zod@4.3.5):
+  zod-validation-error@4.0.2(zod@4.3.6):
     dependencies:
-      zod: 4.3.5
-
-  zod@4.3.5: {}
+      zod: 4.3.6
 
   zod@4.3.6: {}

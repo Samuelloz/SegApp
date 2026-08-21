@@ -2,6 +2,11 @@ packages:
   - apps/*
   - packages/*
 
+packageExtensions:
+  '@hookform/resolvers':
+    peerDependencies:
+      zod: '^3.25.0 || ^4.0.0'
+
 ignoredBuiltDependencies:
   - '@nestjs/core'
   - unrs-resolver
