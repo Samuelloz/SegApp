@@ -1,9 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import {
+    Injectable,
+    NotFoundException
+} from "@nestjs/common";
+
 import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class ContractsService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService) { }
 
     findAll() {
         return this.prisma.contract.findMany({
@@ -17,13 +21,30 @@ export class ContractsService {
         });
     }
 
+    async update(id: string, name: string) {
+        const current = await this.prisma.contract.findUnique({
+            where: { id }
+        });
+
+        if (!current) {
+            throw new NotFoundException('Contrato no encontrado.');
+        }
+
+        return this.prisma.contract.update({
+            where: { id },
+            data: { name },
+        });
+    }
+
     async toggleActive(id: string) {
         const current = await this.prisma.contract.findUnique({
-            where: { id},
+            where: { id },
             select: { active: true }
         });
 
-        if (!current) throw new Error('Contrato no Encontrado');
+        if (!current) {
+            throw new NotFoundException('Contrato no encontrado.');
+        }
 
         return this.prisma.contract.update({
             where: { id },
