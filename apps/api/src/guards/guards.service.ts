@@ -1,4 +1,9 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from "@nestjs/common";
+
 import { Prisma } from "@prisma/client";
 
 import { PrismaService } from "../prisma/prisma.service";
@@ -33,7 +38,9 @@ export class GuardService {
             select: { active: true }
         });
 
-        if (!current) throw new Error('Guardia no Encontrado');
+        if (!current) {
+            throw new NotFoundException('Guardia no encontrado.');
+        }
 
         return this.prisma.guard.update({
             where: { id },
@@ -46,7 +53,9 @@ export class GuardService {
             where: { id },
         });
 
-        if (!current) throw new Error('Guardia no Encontrado');
+        if (!current) {
+            throw new NotFoundException('Guardia no encontrado.');
+        }
 
         try {
             return await this.prisma.guard.update({
