@@ -10,10 +10,6 @@ export default function Navbar() {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        setOpen(false);
-    }, [pathName]);
-
-    useEffect(() => {
         document.body.style.overflow = open ? 'hidden' : '';
 
         return () => {
@@ -39,6 +35,7 @@ export default function Navbar() {
 
     const isContracts = pathName?.startsWith('/contracts');
     const isGuards = pathName?.startsWith('/guards');
+    const isAssignments = pathName?.startsWith('/assignments');
 
     return (
         <header className={styles.header}>
@@ -54,6 +51,7 @@ export default function Navbar() {
                 <nav className={styles.navDesktop}>
                     <Link className={`${styles.link} ${isContracts ? styles.active : ''}`} href="/contracts">Contratos</Link>
                     <Link className={`${styles.link} ${isGuards ? styles.active : ''}`} href="/guards">Guardias</Link>
+                    <Link className={`${styles.link} ${isAssignments ? styles.active : ''}`} href="/assignments">Asignaciones</Link>
                 </nav>
 
                 <button
@@ -86,15 +84,25 @@ export default function Navbar() {
                 <nav className={styles.drawerNav}>
                     <Link
                         className={`${styles.drawerLink} ${isContracts ? styles.drawerActive : ''}`}
-                        href="/contracts">
+                        href="/contracts"
+                        onClick={() => setOpen(false)}>
                         Contratos
                     </Link>
 
                     <Link
                         className={`${styles.drawerLink} ${isGuards ? styles.drawerActive : ''}`}
                         href="/guards"
+                        onClick={() => setOpen(false)}
                     >
                         Guardias
+                    </Link>
+
+                    <Link
+                        className={`${styles.drawerLink} ${isAssignments ? styles.drawerActive : ''}`}
+                        href="/assignments"
+                        onClick={() => setOpen(false)}
+                    >
+                        Asignaciones
                     </Link>
                 </nav>
             </aside>

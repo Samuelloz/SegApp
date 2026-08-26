@@ -18,17 +18,30 @@ export type Guard = {
     updatedAt: string;
 }
 
+export type GuardAssignment = {
+    id: string;
+    guardId: string;
+    contractId: string;
+    startedAt: string;
+    endedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    guard: Guard;
+    contract: Contract;
+};
+
 export const api = createApi({
     reducerPath: 'api',
     baseQuery: fetchBaseQuery({
         baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
     }),
-    tagTypes: ['Contracts', 'Guards'],
+    tagTypes: ['Contracts', 'Guards', 'Assignments'],
     endpoints: (builder) => ({
         getContracts: builder.query<Contract[], void>({
             query: () => '/contracts',
             providesTags: ['Contracts'],
         }),
+
         createContract: builder.mutation<Contract, { name: string }>({
             query: (body) => ({
                 url: '/contracts',
@@ -37,6 +50,7 @@ export const api = createApi({
             }),
             invalidatesTags: ['Contracts'],
         }),
+
         updateContract: builder.mutation<Contract, {
             id: string,
             body: {
@@ -64,6 +78,7 @@ export const api = createApi({
             query: () => '/guards',
             providesTags: ['Guards'],
         }),
+
         createGuard: builder.mutation<Guard, { fullname: string, employeeNumber: string, phone?: string }>({
             query: (body) => ({
                 url: '/guards',
@@ -72,6 +87,7 @@ export const api = createApi({
             }),
             invalidatesTags: ['Guards'],
         }),
+
         updateGuard: builder.mutation<Guard, {
             id: string;
             body: {
@@ -87,12 +103,44 @@ export const api = createApi({
             }),
             invalidatesTags: ['Guards'],
         }),
+
         toggleGuard: builder.mutation<Guard, string>({
             query: (id) => ({
                 url: `/guards/${id}/toggle`,
                 method: 'PATCH',
             }),
             invalidatesTags: ['Guards']
+        }),
+
+        /** Assignments */
+        getAssignments: builder.query<GuardAssignment[], void>({
+            query: () => '/assignments',
+            providesTags: ['Assignments']
+        }),
+
+        createAssignment: builder.mutation<GuardAssignment, {
+            guardId: string,
+            contractId: string,
+            startedAt?: string,
+        }>({
+            query: (body) => ({
+                url: '/assignments',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['Assignments']
+        }),
+
+        endAssignment: builder.mutation<GuardAssignment, {
+            id: string,
+            endedAt?: string,
+        }>({
+            query: ({ id, endedAt }) => ({
+                url: `/assignments/${id}/end`,
+                method: 'PATCH',
+                body: endedAt ? { endedAt } : {}
+            }),
+            invalidatesTags: ['Assignments'],
         }),
     }),
 });
@@ -102,8 +150,13 @@ export const {
     useCreateContractMutation,
     useUpdateContractMutation,
     useToggleContractMutation,
+
     useGetGuardsQuery,
     useCreateGuardMutation,
     useUpdateGuardMutation,
-    useToggleGuardMutation
+    useToggleGuardMutation,
+
+    useGetAssignmentsQuery,
+    useCreateAssignmentMutation,
+    useEndAssignmentMutation,
 } = api;
