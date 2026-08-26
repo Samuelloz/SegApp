@@ -1,4 +1,6 @@
 import './globals.css';
+import 'react-datepicker/dist/react-datepicker.css';
+
 import Providers from './providers';
 import Navbar from '@/components/layout/Navbar';
 import AppToaster from '@/components/ui/AppToaster';
@@ -10,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <Navbar />
           <div className='container page'>
-            { children }
+            {children}
           </div>
         </Providers>
 

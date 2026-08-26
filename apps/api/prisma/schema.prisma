@@ -13,9 +13,11 @@ datasource db {
 }
 
 model Contract {
-  id        String    @id @default(cuid())
-  name      String 
-  active    Boolean   @default(true)
+  id     String  @id @default(cuid())
+  name   String
+  active Boolean @default(true)
+
+  assignments GuardAssignment[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -23,13 +25,35 @@ model Contract {
 }
 
 model Guard {
-  id              String  @id @default(cuid())
-  fullname        String
-  employeeNumber  String  @unique
-  phone           String?
-  active          Boolean     @default (true)
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  deletedAt       DateTime?   @db.Timestamp(6)
+  id             String  @id @default(cuid())
+  fullname       String
+  employeeNumber String  @unique
+  phone          String?
+  active         Boolean @default(true)
+
+  assignments GuardAssignment[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? @db.Timestamp(6)
+}
+
+model GuardAssignment {
+  id String @id @default(cuid())
+
+  guardId    String
+  contractId String
+
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guard    Guard    @relation(fields: [guardId], references: [id], onDelete: Restrict)
+  contract Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+
+  @@index([guardId])
+  @@index([contractId])
+  @@index([endedAt])
 }
