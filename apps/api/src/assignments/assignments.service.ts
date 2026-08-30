@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { DEFAULT_COMPANY_ID } from '../companies/company.constants';
 
 @Injectable()
 export class AssignmentsService {
@@ -13,6 +14,9 @@ export class AssignmentsService {
 
   findAll() {
     return this.prisma.guardAssignment.findMany({
+      where: {
+        companyId: DEFAULT_COMPANY_ID,
+      },
       include: {
         guard: true,
         contract: true,
@@ -28,6 +32,7 @@ export class AssignmentsService {
       this.prisma.guard.findFirst({
         where: {
           id: guardId,
+          companyId: DEFAULT_COMPANY_ID,
           deletedAt: null,
         },
       }),
@@ -35,6 +40,7 @@ export class AssignmentsService {
       this.prisma.contract.findFirst({
         where: {
           id: contractId,
+          companyId: DEFAULT_COMPANY_ID,
           deletedAt: null,
         },
       }),
@@ -42,6 +48,7 @@ export class AssignmentsService {
       this.prisma.guardAssignment.findFirst({
         where: {
           guardId,
+          companyId: DEFAULT_COMPANY_ID,
           endedAt: null,
         },
       }),
@@ -75,6 +82,7 @@ export class AssignmentsService {
       data: {
         guardId,
         contractId,
+        companyId: DEFAULT_COMPANY_ID,
         ...(startedAt ? { startedAt } : {}),
       },
       include: {
@@ -88,6 +96,7 @@ export class AssignmentsService {
     const assignment = await this.prisma.guardAssignment.findUnique({
       where: {
         id,
+        companyId: DEFAULT_COMPANY_ID,
       },
     });
 

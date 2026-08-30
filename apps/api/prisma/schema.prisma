@@ -12,48 +12,77 @@ datasource db {
   provider = "postgresql"
 }
 
-model Contract {
-  id     String  @id @default(cuid())
-  name   String
-  active Boolean @default(true)
+model Company {
+  id        String  @id @default(cuid())
+  name      String
+  legalName String?
+  slug      String  @unique
+  rfc       String? @unique
+  address   String?
+  timezone  String  @default("America/Mexico_City")
+  active    Boolean @default(true)
 
+  guards      Guard[]
+  contracts   Contract[]
   assignments GuardAssignment[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? @db.Timestamp(6)
+}
+
+model Contract {
+  id        String  @id @default(cuid())
+  name      String
+  companyId String
+  active    Boolean @default(true)
+
+  assignments GuardAssignment[]
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? @db.Timestamp(6)
+
+  @@index([companyId])
 }
 
 model Guard {
   id             String  @id @default(cuid())
   fullname       String
-  employeeNumber String  @unique
+  employeeNumber String
   phone          String?
+  companyId      String
   active         Boolean @default(true)
 
   assignments GuardAssignment[]
 
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? @db.Timestamp(6)
+
+  @@unique([companyId, employeeNumber])
 }
 
 model GuardAssignment {
-  id String @id @default(cuid())
-
+  id         String    @id @default(cuid())
   guardId    String
   contractId String
-
-  startedAt DateTime  @default(now())
-  endedAt   DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  companyId  String
+  startedAt  DateTime  @default(now())
+  endedAt    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   guard    Guard    @relation(fields: [guardId], references: [id], onDelete: Restrict)
   contract Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@index([guardId])
   @@index([contractId])
   @@index([endedAt])
+  @@index([companyId])
 }

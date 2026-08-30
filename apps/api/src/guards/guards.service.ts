@@ -1,81 +1,100 @@
 import {
-    ConflictException,
-    Injectable,
-    NotFoundException,
-} from "@nestjs/common";
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
-import { Prisma } from "@prisma/client";
+import { Prisma } from '@prisma/client';
 
-import { PrismaService } from "../prisma/prisma.service";
+import { PrismaService } from '../prisma/prisma.service';
+import { DEFAULT_COMPANY_ID } from '../companies/company.constants';
 
 @Injectable()
 export class GuardService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    findAll() {
-        return this.prisma.guard.findMany({
-            orderBy: { createdAt: "desc" },
-        });
+  findAll() {
+    return this.prisma.guard.findMany({
+      where: {
+        companyId: DEFAULT_COMPANY_ID,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async create(fullname: string, employeeNumber: string, phone: string) {
+    try {
+      return await this.prisma.guard.create({
+        data: {
+          fullname,
+          employeeNumber,
+          phone,
+          companyId: DEFAULT_COMPANY_ID,
+        },
+      });
+    } catch (error: unknown) {
+      this.handlePrismaError(error);
+    }
+  }
+
+  async toggleActive(id: string) {
+    const current = await this.prisma.guard.findFirst({
+      where: {
+        id,
+        companyId: DEFAULT_COMPANY_ID,
+      },
+      select: { active: true },
+    });
+
+    if (!current) {
+      throw new NotFoundException('Guardia no encontrado.');
     }
 
-    async create(fullname: string, employeeNumber: string, phone: string) {
-        try {
-            return await this.prisma.guard.create({
-                data: {
-                    fullname,
-                    employeeNumber,
-                    phone,
-                },
-            });
-        } catch (error: unknown) {
-            this.handlePrismaError(error);
-        }
+    return this.prisma.guard.update({
+      where: { id },
+      data: { active: !current.active },
+    });
+  }
+
+  async update(
+    id: string,
+    fullname: string,
+    employeeNumber: string,
+    phone: string,
+  ) {
+    const current = await this.prisma.guard.findFirst({
+      where: {
+        id,
+        companyId: DEFAULT_COMPANY_ID,
+      },
+    });
+
+    if (!current) {
+      throw new NotFoundException('Guardia no encontrado.');
     }
 
-    async toggleActive(id: string) {
-        const current = await this.prisma.guard.findUnique({
-            where: { id },
-            select: { active: true }
-        });
+    try {
+      return await this.prisma.guard.update({
+        where: { id },
+        data: {
+          fullname,
+          employeeNumber,
+          phone,
+        },
+      });
+    } catch (error: unknown) {
+      this.handlePrismaError(error);
+    }
+  }
 
-        if (!current) {
-            throw new NotFoundException('Guardia no encontrado.');
-        }
-
-        return this.prisma.guard.update({
-            where: { id },
-            data: { active: !current.active }
-        });
+  private handlePrismaError(error: unknown) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      throw new ConflictException('El número de empleado ya está registrado.');
     }
 
-    async update(id: string, fullname: string, employeeNumber: string, phone: string) {
-        const current = await this.prisma.guard.findUnique({
-            where: { id },
-        });
-
-        if (!current) {
-            throw new NotFoundException('Guardia no encontrado.');
-        }
-
-        try {
-            return await this.prisma.guard.update({
-                where: { id },
-                data: {
-                    fullname,
-                    employeeNumber,
-                    phone,
-                },
-            });
-        } catch (error: unknown) {
-            this.handlePrismaError(error);
-        }
-    }
-
-    private handlePrismaError(error: unknown) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-            throw new ConflictException("El número de empleado ya está registrado.");
-        }
-
-        throw error;
-    }
+    throw error;
+  }
 }
