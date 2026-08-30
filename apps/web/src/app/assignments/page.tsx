@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import styles from './assignments.module.css';
 
@@ -138,20 +139,6 @@ function getSelectStyles(
             color: 'var(--muted)',
         }),
     };
-}
-
-function getApiErrorMessage(error: unknown, fallback: string): string {
-    if (typeof error !== 'object' || error === null || !('data' in error)) {
-        return fallback;
-    }
-
-    const data = error.data;
-
-    if (typeof data !== 'object' || data === null || !('message' in data) || typeof data.message !== 'string') {
-        return fallback;
-    }
-
-    return data.message;
 }
 
 function formatDate(value: string): string {
