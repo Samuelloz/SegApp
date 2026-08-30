@@ -8,7 +8,7 @@
     display: grid;
     grid-template-columns: 1fr 160px;
     gap: 10px;
-    align-items: end;
+    align-items: start;
 }
 
 .searchRow {
@@ -19,16 +19,7 @@
 
 .addBtn {
     width: 160px;
-}
-
-@media (max-width: 620px) {
-    .createRow {
-        grid-template-columns: 1fr;
-    }
-
-    .addBtn {
-        width: 100%;
-    }
+    margin-top: 20px;
 }
 
 .fieldLabel {
@@ -116,4 +107,15 @@
     margin-top: 8px;
     padding-top: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 620px) {
+    .createRow {
+        grid-template-columns: 1fr;
+    }
+
+    .addBtn {
+        width: 100%;
+        margin-top: 0;
+    }
 }
