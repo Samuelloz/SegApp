@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from 'sonner';
 
 import styles from './guards.module.css';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import {
     guardSchema,
@@ -25,20 +26,6 @@ import {
     useToggleGuardMutation,
     useUpdateGuardMutation
 } from "@/store/api";
-
-function getApiErrorMessage(error: unknown, fallback: string): string {
-    if (typeof error !== 'object' || error === null || !('data' in error)) {
-        return fallback;
-    }
-
-    const data = error.data;
-
-    if (typeof data !== 'object' || data === null || !('message' in data) || typeof data.message !== 'string') {
-        return fallback;
-    }
-
-    return data.message;
-}
 
 export default function GuardsPage() {
     const { data, isLoading, error } = useGetGuardsQuery();

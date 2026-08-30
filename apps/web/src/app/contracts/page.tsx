@@ -10,6 +10,7 @@ import {
     contractSchema,
     type ContractFormValues
 } from './contract.schema';
+import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -24,25 +25,6 @@ import {
     useUpdateContractMutation,
     useToggleContractMutation
 } from "@/store/api";
-
-function getApiErrorMessage(error: unknown, fallback: string): string {
-    if (typeof error !== 'object' || error === null || !('data' in error)) {
-        return fallback;
-    }
-
-    const data = error.data;
-
-    if (
-        typeof data !== 'object' ||
-        data === null ||
-        !('message' in data) ||
-        typeof data.message !== 'string'
-    ) {
-        return fallback;
-    }
-
-    return data.message;
-}
 
 export default function ContractsPage() {
     const { data, isLoading, error } = useGetContractsQuery();
