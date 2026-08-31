@@ -14,9 +14,9 @@ import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 import styles from './assignments.module.css';
 
 import {
-    assignmentSchema,
+    assignmentFormSchema,
     type AssignmentFormValues,
-} from './assignment.schema';
+} from '@segapp/contracts';
 
 import Modal from "@/components/ui/Modal";
 
@@ -183,7 +183,7 @@ export default function AssignmentsPage() {
         reset,
         formState: { errors },
     } = useForm<AssignmentFormValues>({
-        resolver: zodResolver(assignmentSchema),
+        resolver: zodResolver(assignmentFormSchema),
         defaultValues: {
             guardId: '',
             contractId: '',
