@@ -9,7 +9,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 
 import { useGetCurrentCompanyQuery, useUpdateCurrentCompanyMutation } from "@/store/api";
-import { companySchema, type CompanyFormValues } from "./company.schema";
+import { companySettingsSchema, type CompanyFormValues } from "@segapp/contracts";
 import styles from './settings.module.css';
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
@@ -34,7 +34,7 @@ export default function SettingsPage() {
       isDirty,
     },
   } = useForm<CompanyFormValues>({
-    resolver: zodResolver(companySchema),
+    resolver: zodResolver(companySettingsSchema),
     mode: 'onChange',
     defaultValues: {
       name: '',

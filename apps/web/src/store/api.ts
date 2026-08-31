@@ -1,27 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-
-export type Company = {
-  id: string;
-  name: string;
-  legalName: string | null;
-  slug: string;
-  rfc: string | null;
-  address: string | null;
-  timezone: string;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-};
-
-export type UpdateCompanyInput = {
-  name?: string;
-  legalName?: string;
-  rfc?: string;
-  address?: string;
-  timezone?: string;
-};
+import type { Company, UpdateCompanyInput } from '@segapp/contracts';
 
 export type Contract = {
   id: string;
