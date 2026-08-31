@@ -9,9 +9,10 @@ import styles from './guards.module.css';
 import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
 
 import {
-    guardSchema,
+    guardFormSchema,
+    type Guard,
     type GuardFormValues,
-} from './guard.schema';
+} from '@segapp/contracts';
 
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -20,7 +21,6 @@ import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 
 import {
-    type Guard,
     useCreateGuardMutation,
     useGetGuardsQuery,
     useToggleGuardMutation,
@@ -39,7 +39,7 @@ export default function GuardsPage() {
         reset: resetCreate,
         formState: { errors: createErrors },
     } = useForm<GuardFormValues>({
-        resolver: zodResolver(guardSchema),
+        resolver: zodResolver(guardFormSchema),
         defaultValues: {
             fullname: '',
             employeeNumber: '',
@@ -57,7 +57,7 @@ export default function GuardsPage() {
             isDirty: isEditDirty,
         },
     } = useForm<GuardFormValues>({
-        resolver: zodResolver(guardSchema),
+        resolver: zodResolver(guardFormSchema),
         mode: 'onChange',
         defaultValues: {
             fullname: '',
@@ -94,11 +94,7 @@ export default function GuardsPage() {
         const toastId = toast.loading('Creando guardia...');
 
         try {
-            await createGuard({
-                fullname: values.fullname,
-                employeeNumber: values.employeeNumber,
-                phone: values.phone || undefined,
-            }).unwrap();
+            await createGuard(values).unwrap();
 
             toast.success('Guardia creado', { id: toastId });
             resetCreate();
@@ -146,14 +142,14 @@ export default function GuardsPage() {
     const hasEditChanges = useMemo(() => {
         if (!editOriginal || !isEditDirty) return false;
 
-        const parsed = guardSchema.safeParse(editValues);
+        const parsed = guardFormSchema.safeParse(editValues);
 
         if (!parsed.success) return false;
 
         return (
             parsed.data.fullname !== editOriginal.fullname.trim() ||
             parsed.data.employeeNumber !== editOriginal.employeeNumber.trim() ||
-            (parsed.data.phone ?? '') !== (editOriginal.phone ?? '').trim()
+            parsed.data.phone !== (editOriginal.phone ?? '').trim()
         );
     }, [editOriginal, editValues, isEditDirty]);
 
@@ -177,11 +173,7 @@ export default function GuardsPage() {
         try {
             await updateGuard({
                 id: editId,
-                body: {
-                    fullname: values.fullname,
-                    employeeNumber: values.employeeNumber,
-                    phone: values.phone || undefined,
-                },
+                body: values,
             }).unwrap();
 
             toast.success('Guardia actualizado', {

@@ -1,5 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { Company, UpdateCompanyInput } from '@segapp/contracts';
+import type {
+  Company,
+  CreateGuardInput,
+  Guard,
+  UpdateCompanyInput,
+  UpdateGuardInput,
+} from '@segapp/contracts';
 
 export type Contract = {
   id: string;
@@ -8,16 +14,6 @@ export type Contract = {
   createdAt?: string;
   updatedAt?: string;
 };
-
-export type Guard = {
-  id: string;
-  fullname: string;
-  employeeNumber: string;
-  phone?: string | null;
-  active?: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export type GuardAssignment = {
   id: string;
@@ -94,7 +90,7 @@ export const api = createApi({
       providesTags: ['Guards'],
     }),
 
-    createGuard: builder.mutation<Guard, { fullname: string, employeeNumber: string, phone?: string }>({
+    createGuard: builder.mutation<Guard, CreateGuardInput>({
       query: (body) => ({
         url: '/guards',
         method: 'POST',
@@ -105,11 +101,7 @@ export const api = createApi({
 
     updateGuard: builder.mutation<Guard, {
       id: string;
-      body: {
-        fullname: string;
-        employeeNumber: string;
-        phone?: string;
-      };
+      body: UpdateGuardInput;
     }>({
       query: ({ id, body }) => ({
         url: `/guards/${id}`,
