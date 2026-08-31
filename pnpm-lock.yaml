@@ -27,6 +27,9 @@ importers:
       '@prisma/client':
         specifier: ^7.2.0
         version: 7.2.0(prisma@7.2.0(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3)
+      '@segapp/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
@@ -121,6 +124,9 @@ importers:
       '@reduxjs/toolkit':
         specifier: ^2.11.2
         version: 2.11.2(react-redux@9.2.0(@types/react@19.2.8)(react@19.2.3)(redux@5.0.1))(react@19.2.3)
+      '@segapp/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -175,6 +181,16 @@ importers:
         version: 4.1.18
       typescript:
         specifier: ^5
+        version: 5.9.3
+
+  packages/contracts:
+    dependencies:
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
         version: 5.9.3
 
 packages:

@@ -1,3 +1,5 @@
+import { updateCompanySchema } from '@segapp/contracts';
+import { CompaniesService, UpdateCompanyData } from './companies.service';
 import {
   BadRequestException,
   Body,
@@ -5,19 +7,10 @@ import {
   Get,
   Patch,
 } from '@nestjs/common';
-import { CompaniesService, UpdateCompanyData } from './companies.service';
-
-type UpdateCompanyBody = {
-  name?: string;
-  legalName?: string;
-  rfc?: string;
-  address?: string;
-  timezone?: string;
-};
 
 @Controller('companies')
 export class CompaniesController {
-  constructor(private service: CompaniesService) {}
+  constructor(private service: CompaniesService) { }
 
   @Get('current')
   findCurrent() {
@@ -25,45 +18,31 @@ export class CompaniesController {
   }
 
   @Patch('current')
-  updateCurrent(@Body() body: UpdateCompanyBody) {
-    const data: UpdateCompanyData = {};
+  updateCurrent(@Body() body: unknown) {
+    const result = updateCompanySchema.safeParse(body);
 
-    if (body.name !== undefined) {
-      const name = body.name.trim();
+    if (!result.success) {
+      const message =
+        result.error.issues[0]?.message ??
+        'Los datos de la empresa no son válidos';
 
-      if (!name) {
-        throw new BadRequestException('El nombre de la empresa es obligatorio');
-      }
-
-      data.name = name;
+      throw new BadRequestException(message);
     }
 
-    if (body.legalName !== undefined) {
-      data.legalName = body.legalName.trim() || null;
+    const data: UpdateCompanyData = {
+      ...result.data,
+    };
+
+    if (result.data.legalName !== undefined) {
+      data.legalName = result.data.legalName || null;
     }
 
-    if (body.rfc !== undefined) {
-      data.rfc = body.rfc.trim().toUpperCase() || null;
+    if (result.data.rfc !== undefined) {
+      data.rfc = result.data.rfc || null;
     }
 
-    if (body.address !== undefined) {
-      data.address = body.address.trim() || null;
-    }
-
-    if (body.timezone !== undefined) {
-      const timezone = body.timezone.trim();
-
-      if (!timezone) {
-        throw new BadRequestException('La zona horaria es obligatoria.');
-      }
-
-      data.timezone = timezone;
-    }
-
-    if (Object.keys(data).length === 0) {
-      throw new BadRequestException(
-        'Debes proporcionar al menos un campo para actualizar.',
-      );
+    if (result.data.address !== undefined) {
+      data.address = result.data.address || null;
     }
 
     return this.service.updateCurrent(data);
