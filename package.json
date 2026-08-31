@@ -1,13 +1,16 @@
 {
-  "name": "LozCorp",
+  "name": "segapp",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "Software SaaS para la gestión de empresas de seguridad privada.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "pnpm --filter @segapp/contracts build && pnpm --parallel --filter @segapp/contracts --filter api --filter web dev",
+    "build": "pnpm --filter @segapp/contracts build && pnpm --filter api build && pnpm --filter web build",
+    "typecheck": "pnpm --filter @segapp/contracts typecheck && pnpm --filter api exec tsc --noEmit -p tsconfig.build.json && pnpm --filter web exec tsc --noEmit"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "packageManager": "pnpm@10.28.0"
 }
