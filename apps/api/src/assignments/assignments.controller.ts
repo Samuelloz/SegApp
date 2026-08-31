@@ -1,3 +1,5 @@
+import { createAssignmentSchema, endAssignmentSchema } from '@segapp/contracts';
+
 import {
   BadRequestException,
   Body,
@@ -20,52 +22,38 @@ export class AssignmentsController {
   }
 
   @Post()
-  create(
-    @Body()
-    body: {
-      guardId?: string;
-      contractId?: string;
-      startedAt?: string;
-    },
-  ) {
-    const guardId = (body?.guardId ?? '').trim();
-    const contractId = (body?.contractId ?? '').trim();
-    const startedAtValue = (body?.startedAt ?? '').trim();
+  create(@Body() body: unknown) {
+    const result = createAssignmentSchema.safeParse(body);
 
-    if (!guardId) {
-      throw new BadRequestException('El guardia es obligatorio.');
+    if (!result.success) {
+      const message =
+        result.error.issues[0]?.message ??
+        'Los datos de la asignación no son válidos.';
+
+      throw new BadRequestException(message);
     }
 
-    if (!contractId) {
-      throw new BadRequestException('El contrato es obligatorio.');
-    }
+    const { guardId, contractId, startedAt: startedAtValue } = result.data;
 
-    let startedAt: Date | undefined;
-
-    if (startedAtValue) {
-      startedAt = new Date(startedAtValue);
-
-      if (Number.isNaN(startedAt.getTime())) {
-        throw new BadRequestException('La fecha de inicio no es válida.');
-      }
-    }
+    const startedAt = startedAtValue ? new Date(startedAtValue) : undefined;
 
     return this.service.assignGuard(guardId, contractId, startedAt);
   }
 
   @Patch(':id/end')
-  endAssignment(@Param('id') id: string, @Body() body: { endedAt?: string }) {
-    const endedAtValue = (body?.endedAt ?? '').trim();
+  endAssignment(@Param('id') id: string, @Body() body: unknown) {
+    const result = endAssignmentSchema.safeParse(body);
 
-    let endedAt: Date | undefined;
+    if (!result.success) {
+      const message =
+        result.error.issues[0]?.message ??
+        'Los datos de la finalización no son válidos.';
 
-    if (endedAtValue) {
-      endedAt = new Date(endedAtValue);
-
-      if (Number.isNaN(endedAt.getTime())) {
-        throw new BadRequestException('La fecha de finalización no es válida.');
-      }
+      throw new BadRequestException(message);
     }
+    const endedAt = result.data.endedAt
+      ? new Date(result.data.endedAt)
+      : undefined;
 
     return this.service.endAssignment(id, endedAt);
   }
