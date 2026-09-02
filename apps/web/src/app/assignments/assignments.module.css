@@ -1,83 +1,3 @@
-.formGrid {
-    width: 100%;
-    display: grid;
-    grid-template-columns:
-        minmax(0, 1fr) minmax(0, 1fr) minmax(200px, 0.8fr) 140px;
-    gap: 12px;
-    align-items: start;
-}
-
-.field {
-    min-width: 0;
-}
-
-.fieldLabel {
-    display: block;
-    color: var(--muted);
-    font-size: 12px;
-    margin-bottom: 6px;
-}
-
-.fieldError {
-    color: var(--danger);
-    font-size: 12px;
-    margin-top: 6px;
-}
-
-.submitButton {
-    width: 140px;
-    min-height: 42px;
-    margin-top: 20px;
-}
-
-.cardTop {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.guardName {
-    font-size: 16px;
-    font-weight: 900;
-}
-
-.employeeNumber {
-    margin-top: 4px;
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.contractName {
-    margin-top: 14px;
-    font-weight: 800;
-    color: var(--text);
-}
-
-.metaGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-top: 14px;
-}
-
-.metaLabel {
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.metaValue {
-    margin-top: 3px;
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 16px;
-}
-
 .message {
     color: var(--muted);
     padding: 12px;
@@ -86,26 +6,6 @@
 .errorMessage {
     color: var(--danger);
     padding: 12px;
-}
-
-.confirmText {
-    margin: 0;
-    color: var(--text);
-    line-height: 1.5;
-}
-
-.confirmWarning {
-    margin: 0;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-.confirmActions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding-top: 6px;
 }
 
 .datePickerWrapper {
@@ -269,28 +169,4 @@
     border: 2px solid #0b1020;
     border-radius: 999px;
     background: var(--muted);
-}
-
-@media (max-width: 980px) {
-    .formGrid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .submitButton {
-        width: 100%;
-    }
-}
-
-@media (max-width: 620px) {
-    .formGrid {
-        grid-template-columns: 1fr;
-    }
-
-    .submitButton {
-        margin-top: 0;
-    }
-
-    .metaGrid {
-        grid-template-columns: 1fr;
-    }
 }
