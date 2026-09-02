@@ -47,7 +47,7 @@
 }
 
 @media (max-width: 620px) {
-    .metaGrid {
-        grid-template-columns: 1fr;
-    }
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
 }
