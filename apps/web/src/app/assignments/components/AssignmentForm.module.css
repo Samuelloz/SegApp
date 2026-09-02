@@ -1,0 +1,54 @@
+.formGrid {
+  width: 100%;
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr)
+    minmax(200px, 0.8fr)
+    140px;
+  gap: 12px;
+  align-items: start;
+}
+
+.field {
+  min-width: 0;
+}
+
+.fieldLabel {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.fieldError {
+  color: var(--danger);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.submitButton {
+  width: 140px;
+  min-height: 42px;
+  margin-top: 20px;
+}
+
+@media (max-width: 980px) {
+  .formGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .submitButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .submitButton {
+    margin-top: 0;
+  }
+}

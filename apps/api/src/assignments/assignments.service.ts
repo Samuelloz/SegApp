@@ -114,6 +114,12 @@ export class AssignmentsService {
       );
     }
 
+    if (endedAt > new Date()) {
+      throw new BadRequestException(
+        'La fecha de finalización no puede ser posterior a la fecha actual.',
+      );
+    }
+
     return this.prisma.guardAssignment.update({
       where: {
         id,

@@ -1,0 +1,53 @@
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.guardName {
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.employeeNumber {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.contractName {
+  margin-top: 14px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.metaLabel {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.metaValue {
+  margin-top: 3px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+@media (max-width: 620px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+}
