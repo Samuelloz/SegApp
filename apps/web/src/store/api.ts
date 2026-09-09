@@ -11,6 +11,7 @@ import type {
   UpdateCompanyInput,
   UpdateContractInput,
   UpdateGuardInput,
+  UpdateActiveStatusInput,
 } from '@segapp/contracts';
 
 export const api = createApi({
@@ -48,10 +49,13 @@ export const api = createApi({
       invalidatesTags: ['Contracts'],
     }),
 
-    updateContract: builder.mutation<Contract, {
-      id: string,
-      body: UpdateContractInput;
-    }>({
+    updateContract: builder.mutation<
+      Contract,
+      {
+        id: string;
+        body: UpdateContractInput;
+      }
+    >({
       query: ({ id, body }) => ({
         url: `/contracts/${id}`,
         method: 'PATCH',
@@ -83,10 +87,13 @@ export const api = createApi({
       invalidatesTags: ['Guards'],
     }),
 
-    updateGuard: builder.mutation<Guard, {
-      id: string;
-      body: UpdateGuardInput;
-    }>({
+    updateGuard: builder.mutation<
+      Guard,
+      {
+        id: string;
+        body: UpdateGuardInput;
+      }
+    >({
       query: ({ id, body }) => ({
         url: `/guards/${id}`,
         method: 'PATCH',
@@ -95,18 +102,25 @@ export const api = createApi({
       invalidatesTags: ['Guards'],
     }),
 
-    toggleGuard: builder.mutation<Guard, string>({
-      query: (id) => ({
-        url: `/guards/${id}/toggle`,
+    updateGuardStatus: builder.mutation<
+      Guard,
+      {
+        id: string;
+        body: UpdateActiveStatusInput;
+      }
+    >({
+      query: ({ id, body }) => ({
+        url: `/guards/${id}/status`,
         method: 'PATCH',
+        body,
       }),
-      invalidatesTags: ['Guards']
+      invalidatesTags: ['Guards'],
     }),
 
     /** Assignments */
     getAssignments: builder.query<GuardAssignment[], void>({
       query: () => '/assignments',
-      providesTags: ['Assignments']
+      providesTags: ['Assignments'],
     }),
 
     createAssignment: builder.mutation<GuardAssignment, CreateAssignmentInput>({
@@ -115,17 +129,20 @@ export const api = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Assignments']
+      invalidatesTags: ['Assignments'],
     }),
 
-    endAssignment: builder.mutation<GuardAssignment, {
-      id: string,
-      body?: EndAssignmentInput,
-    }>({
+    endAssignment: builder.mutation<
+      GuardAssignment,
+      {
+        id: string;
+        body?: EndAssignmentInput;
+      }
+    >({
       query: ({ id, body }) => ({
         url: `/assignments/${id}/end`,
         method: 'PATCH',
-        body: body ?? {}
+        body: body ?? {},
       }),
       invalidatesTags: ['Assignments'],
     }),
@@ -144,7 +161,7 @@ export const {
   useGetGuardsQuery,
   useCreateGuardMutation,
   useUpdateGuardMutation,
-  useToggleGuardMutation,
+  useUpdateGuardStatusMutation,
 
   useGetAssignmentsQuery,
   useCreateAssignmentMutation,

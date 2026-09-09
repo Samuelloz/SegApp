@@ -1,22 +1,14 @@
 'use client';
-import type { InputHTMLAttributes } from "react";
 
-export default function Input(props: InputHTMLAttributes<HTMLInputElement>) {
-    return (
-        <input
-            {...props}
-            style={{
-                padding: '11px 12px',
-                borderRadius: 12,
-                border: '1px solid var(--line)',
-                background: 'rgba(0,0,0,.25)',
-                color: 'var(--text)',
-                WebkitTextFillColor: 'var(--text)',
-                caretColor: 'var(--text)',
-                outline: 'none',
-                width: '100%',
-                ...props.style,
-            }}
-        />
-    );
-};
+import type { InputHTMLAttributes } from 'react';
+
+import styles from './gloablUiCss/Input.module.css';
+
+export default function Input({
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
+  const inputClassName = `${styles.input} ${className ?? ''}`.trim();
+
+  return <input {...props} className={inputClassName} />;
+}

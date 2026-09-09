@@ -29,7 +29,7 @@ export default function EndAssignmentModal({
       <div className={styles.content}>
         <p className={styles.text}>
           ¿Deseas finalizar la asignación de{' '}
-          <strong>{assignment.guard.fullname}</strong>?
+          <strong>{assignment.guard.fullName}</strong>?
         </p>
 
         <p className={styles.warning}>

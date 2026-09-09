@@ -1,4 +1,8 @@
-import { createGuardSchema, updateGuardSchema } from '@segapp/contracts';
+import {
+  createGuardSchema,
+  updateGuardSchema,
+  updateActiveStatusSchema,
+} from '@segapp/contracts';
 
 import {
   BadRequestException,
@@ -33,14 +37,22 @@ export class GuardsController {
       throw new BadRequestException(message);
     }
 
-    const { fullname, employeeNumber, phone } = result.data;
-
-    return this.service.create(fullname, employeeNumber, phone);
+    return this.service.create(result.data);
   }
 
-  @Patch(':id/toggle')
-  toggle(@Param('id') id: string) {
-    return this.service.toggleActive(id);
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() body: unknown) {
+    const result = updateActiveStatusSchema.safeParse(body);
+
+    if (!result.success) {
+      const message =
+        result.error.issues[0]?.message ??
+        'Los datos del guardia no son válidos.';
+
+      throw new BadRequestException(message);
+    }
+
+    return this.service.updateActiveStatus(id, result.data.active);
   }
 
   @Patch(':id')
@@ -55,8 +67,6 @@ export class GuardsController {
       throw new BadRequestException(message);
     }
 
-    const { fullname, employeeNumber, phone } = result.data;
-
-    return this.service.update(id, fullname, employeeNumber, phone);
+    return this.service.update(id, result.data);
   }
 }

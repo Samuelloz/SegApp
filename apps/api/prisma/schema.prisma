@@ -49,12 +49,34 @@ model Contract {
 }
 
 model Guard {
-  id             String  @id @default(cuid())
-  fullname       String
+  id             String   @id @default(cuid())
+  fullName       String
+  fatherFullName String
+  motherFullName String
+  birthDate      DateTime @db.Date
+  birthPlace     String
   employeeNumber String
+  hiredAt        DateTime @db.Date
   phone          String?
-  companyId      String
-  active         Boolean @default(true)
+  rfc            String
+  curp           String
+  nss            String
+
+  street           String?
+  exteriorNumber   String?
+  interiorNumber   String?
+  neighborhood     String?
+  postalCode       String?
+  city             String?
+  municipality     String?
+  state            String?
+  country          String?
+  formattedAddress String?
+  latitude         Float?
+  longitude        Float?
+  externalPlaceId  String?
+  companyId        String
+  active           Boolean @default(true)
 
   assignments GuardAssignment[]
 
@@ -65,6 +87,9 @@ model Guard {
   deletedAt DateTime? @db.Timestamp(6)
 
   @@unique([companyId, employeeNumber])
+  @@unique([companyId, rfc])
+  @@unique([companyId, curp])
+  @@unique([companyId, nss])
 }
 
 model GuardAssignment {

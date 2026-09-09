@@ -109,7 +109,7 @@ export default function AssignmentsPage() {
     () =>
       availableGuards.map((guard) => ({
         value: guard.id,
-        label: `${guard.fullname} - ${guard.employeeNumber}`,
+        label: `${guard.fullName} - ${guard.employeeNumber}`,
       })),
     [availableGuards],
   );
