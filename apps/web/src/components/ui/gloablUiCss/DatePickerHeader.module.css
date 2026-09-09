@@ -1,0 +1,107 @@
+.header {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 8px;
+}
+
+.dateNavigation {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  transform: translateX(-50%);
+}
+
+.previousButton {
+  grid-column: 1;
+}
+
+.nextButton {
+  grid-column: 3;
+}
+
+.navigationButton,
+.dateButton,
+.optionButton {
+  border: 1px solid transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.navigationButton {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.dateButton {
+  padding: 5px 7px;
+  border-radius: 8px;
+  background: transparent;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.navigationButton:hover:not(:disabled),
+.dateButton:hover,
+.optionButton:hover:not(:disabled) {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.navigationButton:focus-visible,
+.dateButton:focus-visible,
+.optionButton:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.navigationButton:disabled,
+.optionButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.selectionPanel {
+  position: absolute;
+  top: 100%;
+  right: -8px;
+  left: -8px;
+  min-height: 242px;
+  padding: 14px;
+  border-top: 1px solid var(--line);
+  background: #0b1020;
+  z-index: 5;
+}
+
+.monthGrid,
+.yearGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.optionButton {
+  min-height: 44px;
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: transparent;
+  text-transform: capitalize;
+}
+
+.selectedOption {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+}

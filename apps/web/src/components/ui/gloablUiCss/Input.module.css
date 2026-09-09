@@ -1,0 +1,20 @@
+.input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  caret-color: var(--text);
+}
+
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input:-webkit-autofill:active {
+  border-color: var(--line);
+  box-shadow: 0 0 0 1000px #090c12 inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+}
