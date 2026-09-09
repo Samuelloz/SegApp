@@ -36,7 +36,7 @@ export default function AssignmentCard({
     <Card>
       <div className={styles.cardTop}>
         <div>
-          <div className={styles.guardName}>{assignment.guard.fullname}</div>
+          <div className={styles.guardName}>{assignment.guard.fullName}</div>
 
           <div className={styles.employeeNumber}>
             No. de empleado: {assignment.guard.employeeNumber}
