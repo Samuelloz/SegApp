@@ -1,0 +1,55 @@
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.cardTitle {
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.cardSub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.employeeNumber {
+  color: var(--text);
+  font-weight: 800;
+}
+
+.badgeBtn {
+  cursor: pointer;
+}
+
+.badgeBtn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.metaRow {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.metaLabel {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.metaValue {
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
