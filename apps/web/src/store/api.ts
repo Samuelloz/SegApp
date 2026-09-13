@@ -17,7 +17,7 @@ import type {
 export const api = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || '/api',
   }),
   tagTypes: ['Company', 'Contracts', 'Guards', 'Assignments'],
   endpoints: (builder) => ({
