@@ -32,10 +32,32 @@ model Company {
 }
 
 model Contract {
-  id        String  @id @default(cuid())
-  name      String
-  companyId String
+  id                 String    @id @default(cuid())
+  name               String
+  clientLegalName    String
+  startDate          DateTime  @db.Date
+  endDate            DateTime? @db.Date
+  contactName        String
+  contactPhone       String
+  contactEmail       String?
+  requiredGuardCount Int
+
+  street           String?
+  exteriorNumber   String?
+  interiorNumber   String?
+  neighborhood     String?
+  postalCode       String?
+  city             String?
+  municipality     String?
+  state            String?
+  country          String?
+  formattedAddress String?
+  latitude         Float?
+  longitude        Float?
+  externalPlaceId  String?
+
   active    Boolean @default(true)
+  companyId String
 
   assignments GuardAssignment[]
 
