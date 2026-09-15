@@ -35,6 +35,7 @@ model Contract {
   id                 String    @id @default(cuid())
   name               String
   clientLegalName    String
+  clientRfc          String
   startDate          DateTime  @db.Date
   endDate            DateTime? @db.Date
   contactName        String
@@ -67,7 +68,7 @@ model Contract {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? @db.Timestamp(6)
 
-  @@index([companyId])
+  @@index([companyId, clientRfc])
 }
 
 model Guard {
