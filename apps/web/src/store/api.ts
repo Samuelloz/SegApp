@@ -64,10 +64,17 @@ export const api = createApi({
       invalidatesTags: ['Contracts'],
     }),
 
-    toggleContract: builder.mutation<Contract, string>({
-      query: (id) => ({
-        url: `/contracts/${id}/toggle`,
+    updateContractStatus: builder.mutation<
+      Contract,
+      {
+        id: string;
+        body: UpdateActiveStatusInput;
+      }
+    >({
+      query: ({ id, body }) => ({
+        url: `/contracts/${id}/status`,
         method: 'PATCH',
+        body,
       }),
       invalidatesTags: ['Contracts'],
     }),
@@ -156,7 +163,7 @@ export const {
   useGetContractsQuery,
   useCreateContractMutation,
   useUpdateContractMutation,
-  useToggleContractMutation,
+  useUpdateContractStatusMutation,
 
   useGetGuardsQuery,
   useCreateGuardMutation,
