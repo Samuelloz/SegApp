@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -84,7 +82,7 @@ export default function GuardForm({
         <Input
           {...register('fullName')}
           aria-invalid={Boolean(errors.fullName)}
-          placeholder="Ej. José Antonio Ramírez"
+          placeholder="Ej. Pedro Gabriel Mendoza Pérez"
         />
 
         {errors.fullName && (
@@ -98,7 +96,7 @@ export default function GuardForm({
         <Input
           {...register('fatherFullName')}
           aria-invalid={Boolean(errors.fatherFullName)}
-          placeholder="Ej. José Antonio Ramírez"
+          placeholder="Ej. Ricardo Mendoza García"
         />
 
         {errors.fatherFullName && (
@@ -116,7 +114,7 @@ export default function GuardForm({
         <Input
           {...register('motherFullName')}
           aria-invalid={Boolean(errors.motherFullName)}
-          placeholder="Ej. José Antonio Ramírez"
+          placeholder="Ej. Elena Pérez Rodríguez"
         />
 
         {errors.motherFullName && (
@@ -157,7 +155,7 @@ export default function GuardForm({
                   maxDate={new Date()}
                 />
               )}
-              placeholderText="Selecciona fecha de nacimiento"
+              placeholderText="Selecciona la fecha de nacimiento"
               isClearable
               showPopperArrow={false}
               wrapperClassName={styles.datePickerWrapper}
@@ -182,7 +180,7 @@ export default function GuardForm({
         <Input
           {...register('birthPlace')}
           aria-invalid={Boolean(errors.birthPlace)}
-          placeholder="Ej. Torreón Coahuila"
+          placeholder="Ej. Saltillo, Coahuila"
         />
 
         {errors.birthPlace && (
@@ -196,7 +194,7 @@ export default function GuardForm({
         <Input
           {...register('employeeNumber')}
           aria-invalid={Boolean(errors.employeeNumber)}
-          placeholder="Ej. 123456"
+          placeholder="Ej. 000347"
         />
 
         {errors.employeeNumber && (
@@ -237,7 +235,7 @@ export default function GuardForm({
                   maxDate={new Date()}
                 />
               )}
-              placeholderText="Selecciona fecha de contratación"
+              placeholderText="Selecciona la fecha de contratación"
               isClearable
               showPopperArrow={false}
               wrapperClassName={styles.datePickerWrapper}
@@ -260,7 +258,7 @@ export default function GuardForm({
         <Input
           {...register('phone')}
           aria-invalid={Boolean(errors.phone)}
-          placeholder="Ej. 8711786592"
+          placeholder="Ej. 844 123 4567"
         />
 
         {errors.phone && (
@@ -274,7 +272,7 @@ export default function GuardForm({
         <Input
           {...register('rfc')}
           aria-invalid={Boolean(errors.rfc)}
-          placeholder="Ej. LOAS960510EJ7"
+          placeholder="Ej. GAMP940812KJ6"
         />
 
         {errors.rfc && (
@@ -288,7 +286,7 @@ export default function GuardForm({
         <Input
           {...register('curp')}
           aria-invalid={Boolean(errors.curp)}
-          placeholder="Ej. "
+          placeholder="Ej. GAMP940812HCLRRD08"
         />
 
         {errors.curp && (
@@ -302,7 +300,7 @@ export default function GuardForm({
         <Input
           {...register('nss')}
           aria-invalid={Boolean(errors.nss)}
-          placeholder="Ej. Torreón Coahuila"
+          placeholder="Ej. 72941583620"
         />
 
         {errors.nss && (
@@ -319,7 +317,7 @@ export default function GuardForm({
             <Input
               {...register('street')}
               aria-invalid={Boolean(errors.street)}
-              placeholder="Ej. José Maria Martinez"
+              placeholder="Ej. Calle Hidalgo"
             />
 
             {errors.street && (
@@ -333,7 +331,7 @@ export default function GuardForm({
             <Input
               {...register('exteriorNumber')}
               aria-invalid={Boolean(errors.exteriorNumber)}
-              placeholder="Ej. 32"
+              placeholder="Ej. 418"
             />
 
             {errors.exteriorNumber && (
@@ -349,7 +347,7 @@ export default function GuardForm({
             <Input
               {...register('interiorNumber')}
               aria-invalid={Boolean(errors.interiorNumber)}
-              placeholder="Ej. 2B"
+              placeholder="Ej. Depto. 3"
             />
 
             {errors.interiorNumber && (
@@ -365,7 +363,7 @@ export default function GuardForm({
             <Input
               {...register('neighborhood')}
               aria-invalid={Boolean(errors.neighborhood)}
-              placeholder="Ej. Fidel Velazquez"
+              placeholder="Ej. República Oriente"
             />
 
             {errors.neighborhood && (
@@ -381,7 +379,7 @@ export default function GuardForm({
             <Input
               {...register('postalCode')}
               aria-invalid={Boolean(errors.postalCode)}
-              placeholder="Ej. 27019"
+              placeholder="Ej. 25280"
             />
 
             {errors.postalCode && (
@@ -397,7 +395,7 @@ export default function GuardForm({
             <Input
               {...register('city')}
               aria-invalid={Boolean(errors.city)}
-              placeholder="Ej. Torreón"
+              placeholder="Ej. Saltillo"
             />
 
             {errors.city && (
@@ -411,7 +409,7 @@ export default function GuardForm({
             <Input
               {...register('municipality')}
               aria-invalid={Boolean(errors.municipality)}
-              placeholder="Ej. Torreón"
+              placeholder="Ej. Saltillo"
             />
 
             {errors.municipality && (
