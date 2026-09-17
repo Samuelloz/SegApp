@@ -1,24 +1,24 @@
 import { useId, useState } from 'react';
-import type { GuardFormValues } from '@segapp/contracts';
+import type { ContractFormValues } from '@segapp/contracts';
 
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 
-import GuardForm from './GuardForm';
-import styles from './GuardForm.module.css';
+import ContractForm from './ContractForm';
+import styles from './ContractForm.module.css';
 
-type GuardFormModalProps = {
+type ContractFormModalProps = {
   open: boolean;
   title: string;
-  initialValues: GuardFormValues;
+  initialValues: ContractFormValues;
   isSubmitting: boolean;
   submitLabel: string;
   disabledWhenPristine: boolean;
-  onSubmit: (values: GuardFormValues) => Promise<boolean>;
+  onSubmit: (values: ContractFormValues) => Promise<boolean>;
   onClose: () => void;
 };
 
-export default function GuardFormModal({
+export default function ContractFormModal({
   open,
   title,
   initialValues,
@@ -27,11 +27,11 @@ export default function GuardFormModal({
   disabledWhenPristine,
   onSubmit,
   onClose,
-}: GuardFormModalProps) {
+}: ContractFormModalProps) {
   const formId = useId();
   const [isDirty, setIsDirty] = useState(false);
 
-  function handleDirtyChange(nextIsDirty: boolean) {
+  function handleIsDirtyChange(nextIsDirty: boolean) {
     setIsDirty(nextIsDirty);
   }
 
@@ -67,11 +67,11 @@ export default function GuardFormModal({
 
   return (
     <Modal open={open} title={title} footer={footer} onClose={handleClose}>
-      <GuardForm
+      <ContractForm
         formId={formId}
         initialValues={initialValues}
         onSubmit={onSubmit}
-        onDirtyChange={handleDirtyChange}
+        onDirtyChange={handleIsDirtyChange}
       />
     </Modal>
   );

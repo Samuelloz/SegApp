@@ -54,7 +54,7 @@ export default function GuardCard({
           onClick={handleToggleActive}
           className={styles.badgeBtn}
           aria-disabled={isUpdatingStatus}
-          title="Click para cambiar status"
+          title="Clic para cambiar estatus"
         >
           {guard.active ? 'Activo' : 'Inactivo'}
         </Badge>

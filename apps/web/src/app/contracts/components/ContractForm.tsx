@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { guardFormSchema, type GuardFormValues } from '@segapp/contracts';
+import { contractFormSchema, type ContractFormValues } from '@segapp/contracts';
 
 import Input from '@/components/ui/Input';
 import DatePickerHeader from '@/components/ui/DatePickerHeader';
@@ -10,49 +10,53 @@ import DatePicker from 'react-datepicker';
 import { format, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-import styles from './GuardForm.module.css';
+import styles from './ContractForm.module.css';
 
-import { calculateGuardAge, hasGuardAddress } from '../guard.utils';
+import { hasContractAddress } from '../contract.utils';
 
-const MIN_GUARD_DATE = new Date(1900, 0, 1);
+const MIN_CONTRACT_DATE = new Date(1900, 0, 1);
+const MAX_CONTRACT_DATE = new Date(2100, 11, 31);
 
-type GuardFormProps = {
+type ContractFormProps = {
   formId: string;
-  initialValues: GuardFormValues;
-  onSubmit: (values: GuardFormValues) => Promise<boolean>;
+  initialValues: ContractFormValues;
+  onSubmit: (values: ContractFormValues) => Promise<boolean>;
   onDirtyChange: (isDirty: boolean) => void;
 };
 
-export default function GuardForm({
+export default function ContractForm({
   formId,
   initialValues,
   onSubmit,
   onDirtyChange,
-}: GuardFormProps) {
+}: ContractFormProps) {
   const {
     control,
     register,
     handleSubmit,
     reset,
     formState: { errors, isDirty },
-  } = useForm<GuardFormValues>({
-    resolver: zodResolver(guardFormSchema),
+  } = useForm<ContractFormValues>({
+    resolver: zodResolver(contractFormSchema),
     defaultValues: initialValues,
   });
 
-  const addressDetailsRef = useRef<HTMLDetailsElement>(null);
+  const addressDetailRef = useRef<HTMLDetailsElement>(null);
 
-  const birthDate = useWatch({
+  const startDate = useWatch({
     control,
-    name: 'birthDate',
+    name: 'startDate',
   });
 
-  const age = calculateGuardAge(birthDate);
+  const selectedStartDate = startDate
+    ? parse(startDate, 'yyyy-MM-dd', new Date())
+    : MIN_CONTRACT_DATE;
 
   useEffect(() => {
     reset(initialValues);
-    if (addressDetailsRef.current) {
-      addressDetailsRef.current.open = hasGuardAddress(initialValues);
+
+    if (addressDetailRef.current) {
+      addressDetailRef.current.open = hasContractAddress(initialValues);
     }
   }, [initialValues, reset]);
 
@@ -60,7 +64,7 @@ export default function GuardForm({
     onDirtyChange(isDirty);
   }, [isDirty, onDirtyChange]);
 
-  async function handleFormSubmit(values: GuardFormValues) {
+  async function handleFormSubmit(values: ContractFormValues) {
     const wasSuccessful = await onSubmit(values);
 
     if (wasSuccessful) {
@@ -77,238 +81,212 @@ export default function GuardForm({
       noValidate
     >
       <div className={styles.field}>
-        <label className={styles.fieldLabel}>Nombre completo *</label>
+        <label className={styles.fieldLabel}>Nombre del Contrato *</label>
 
         <Input
-          {...register('fullName')}
-          aria-invalid={Boolean(errors.fullName)}
-          placeholder="Ej. Pedro Gabriel Mendoza Pérez"
+          {...register('name')}
+          aria-invalid={Boolean(errors.name)}
+          placeholder="Ej. Servicio de vigilancia Plaza del Sol"
         />
 
-        {errors.fullName && (
-          <div className={styles.fieldError}>{errors.fullName.message}</div>
+        {errors.name && (
+          <div className={styles.fieldError}>{errors.name.message}</div>
         )}
       </div>
 
       <div className={styles.field}>
-        <label className={styles.fieldLabel}>Nombre del padre completo *</label>
+        <label className={styles.fieldLabel}>Nombre del cliente *</label>
 
         <Input
-          {...register('fatherFullName')}
-          aria-invalid={Boolean(errors.fatherFullName)}
-          placeholder="Ej. Ricardo Mendoza García"
+          {...register('clientLegalName')}
+          aria-invalid={Boolean(errors.clientLegalName)}
+          placeholder="Ej. Comercializadora del Norte, S.A. de C.V."
         />
 
-        {errors.fatherFullName && (
+        {errors.clientLegalName && (
           <div className={styles.fieldError}>
-            {errors.fatherFullName.message}
+            {errors.clientLegalName.message}
           </div>
+        )}
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>RFC del cliente *</label>
+
+        <Input
+          {...register('clientRfc')}
+          aria-invalid={Boolean(errors.clientRfc)}
+          placeholder="Ej. CDN260315AB1"
+        />
+
+        {errors.clientRfc && (
+          <div className={styles.fieldError}>{errors.clientRfc.message}</div>
+        )}
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>Fecha de inicio *</label>
+
+        <Controller
+          name="startDate"
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              id="contract-start-date"
+              name="contract-start-date"
+              minDate={MIN_CONTRACT_DATE}
+              maxDate={MAX_CONTRACT_DATE}
+              autoComplete="off"
+              selected={
+                field.value
+                  ? parse(field.value, 'yyyy-MM-dd', new Date())
+                  : null
+              }
+              onChange={(date: Date | null) =>
+                field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+              }
+              onBlur={field.onBlur}
+              locale={es}
+              dateFormat="dd/MM/yyyy"
+              renderCustomHeader={(headerProps) => (
+                <DatePickerHeader
+                  {...headerProps}
+                  minDate={MIN_CONTRACT_DATE}
+                  maxDate={MAX_CONTRACT_DATE}
+                />
+              )}
+              placeholderText="Selecciona la fecha de inicio"
+              isClearable
+              showPopperArrow={false}
+              wrapperClassName={styles.datePickerWrapper}
+              className={styles.datePickerInput}
+              calendarClassName={styles.datePickerCalendar}
+              popperClassName={styles.datePickerPopper}
+              aria-invalid={errors.startDate ? 'true' : undefined}
+            />
+          )}
+        />
+
+        {errors.startDate && (
+          <div className={styles.fieldError}>{errors.startDate.message}</div>
+        )}
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>Fecha de finalización</label>
+
+        <Controller
+          name="endDate"
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              id="contract-end-date"
+              name="contract-end-date"
+              minDate={selectedStartDate}
+              maxDate={MAX_CONTRACT_DATE}
+              autoComplete="off"
+              selected={
+                field.value
+                  ? parse(field.value, 'yyyy-MM-dd', new Date())
+                  : null
+              }
+              onChange={(date: Date | null) =>
+                field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
+              }
+              onBlur={field.onBlur}
+              locale={es}
+              dateFormat="dd/MM/yyyy"
+              renderCustomHeader={(headerProps) => (
+                <DatePickerHeader
+                  {...headerProps}
+                  minDate={selectedStartDate}
+                  maxDate={MAX_CONTRACT_DATE}
+                />
+              )}
+              placeholderText="Selecciona la fecha de finalización"
+              isClearable
+              showPopperArrow={false}
+              wrapperClassName={styles.datePickerWrapper}
+              className={styles.datePickerInput}
+              calendarClassName={styles.datePickerCalendar}
+              popperClassName={styles.datePickerPopper}
+              aria-invalid={errors.endDate ? 'true' : undefined}
+            />
+          )}
+        />
+
+        {errors.endDate && (
+          <div className={styles.fieldError}>{errors.endDate.message}</div>
+        )}
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>Nombre del contacto *</label>
+
+        <Input
+          {...register('contactName')}
+          aria-invalid={Boolean(errors.contactName)}
+          placeholder="Ej. Mariana Torres Salazar"
+        />
+
+        {errors.contactName && (
+          <div className={styles.fieldError}>{errors.contactName.message}</div>
+        )}
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>Teléfono del contacto *</label>
+
+        <Input
+          {...register('contactPhone')}
+          aria-invalid={Boolean(errors.contactPhone)}
+          placeholder="Ej. 871 456 7820"
+        />
+
+        {errors.contactPhone && (
+          <div className={styles.fieldError}>{errors.contactPhone.message}</div>
+        )}
+      </div>
+
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>Correo electrónico</label>
+
+        <Input
+          {...register('contactEmail')}
+          aria-invalid={Boolean(errors.contactEmail)}
+          placeholder="Ej. mariana.torres@cliente.mx"
+        />
+
+        {errors.contactEmail && (
+          <div className={styles.fieldError}>{errors.contactEmail.message}</div>
         )}
       </div>
 
       <div className={styles.field}>
         <label className={styles.fieldLabel}>
-          Nombre de la madre completo *
+          Número de guardias en el contrato *
         </label>
 
         <Input
-          {...register('motherFullName')}
-          aria-invalid={Boolean(errors.motherFullName)}
-          placeholder="Ej. Elena Pérez Rodríguez"
+          type="number"
+          className={styles.numberInput}
+          min={1}
+          step={1}
+          {...register('requiredGuardCount', {
+            valueAsNumber: true,
+          })}
+          aria-invalid={Boolean(errors.requiredGuardCount)}
+          placeholder="Ej. 12"
         />
 
-        {errors.motherFullName && (
+        {errors.requiredGuardCount && (
           <div className={styles.fieldError}>
-            {errors.motherFullName.message}
+            {errors.requiredGuardCount.message}
           </div>
         )}
       </div>
 
-      <div className={styles.field}>
-        <label className={styles.fieldLabel}>Fecha de Nacimiento *</label>
-
-        <Controller
-          name="birthDate"
-          control={control}
-          render={({ field }) => (
-            <DatePicker
-              id="guard-birth-date"
-              name="guard-birth-date"
-              minDate={MIN_GUARD_DATE}
-              maxDate={new Date()}
-              autoComplete="off"
-              selected={
-                field.value
-                  ? parse(field.value, 'yyyy-MM-dd', new Date())
-                  : null
-              }
-              onChange={(date: Date | null) =>
-                field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
-              }
-              onBlur={field.onBlur}
-              locale={es}
-              dateFormat="dd/MM/yyyy"
-              renderCustomHeader={(headerProps) => (
-                <DatePickerHeader
-                  {...headerProps}
-                  minDate={MIN_GUARD_DATE}
-                  maxDate={new Date()}
-                />
-              )}
-              placeholderText="Selecciona la fecha de nacimiento"
-              isClearable
-              showPopperArrow={false}
-              wrapperClassName={styles.datePickerWrapper}
-              className={styles.datePickerInput}
-              calendarClassName={styles.datePickerCalendar}
-              popperClassName={styles.datePickerPopper}
-              aria-invalid={errors.birthDate ? 'true' : undefined}
-            />
-          )}
-        />
-
-        {errors.birthDate && (
-          <div className={styles.fieldError}>{errors.birthDate.message}</div>
-        )}
-
-        {age !== null && <div>Edad: {age} años</div>}
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.fieldLabel}>Lugar de Nacimiento *</label>
-
-        <Input
-          {...register('birthPlace')}
-          aria-invalid={Boolean(errors.birthPlace)}
-          placeholder="Ej. Saltillo, Coahuila"
-        />
-
-        {errors.birthPlace && (
-          <div className={styles.fieldError}>{errors.birthPlace.message}</div>
-        )}
-      </div>
-
-      <div className={styles.field}>
-        <div className={styles.fieldLabel}>No. de Empleado *</div>
-
-        <Input
-          {...register('employeeNumber')}
-          aria-invalid={Boolean(errors.employeeNumber)}
-          placeholder="Ej. 000347"
-        />
-
-        {errors.employeeNumber && (
-          <div className={styles.fieldError}>
-            {errors.employeeNumber.message}
-          </div>
-        )}
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.fieldLabel}>Fecha de contratación *</label>
-
-        <Controller
-          name="hiredAt"
-          control={control}
-          render={({ field }) => (
-            <DatePicker
-              id="guard-hired-at"
-              name="guard-hired-at"
-              minDate={MIN_GUARD_DATE}
-              maxDate={new Date()}
-              autoComplete="off"
-              selected={
-                field.value
-                  ? parse(field.value, 'yyyy-MM-dd', new Date())
-                  : null
-              }
-              onChange={(date: Date | null) =>
-                field.onChange(date ? format(date, 'yyyy-MM-dd') : '')
-              }
-              onBlur={field.onBlur}
-              locale={es}
-              dateFormat="dd/MM/yyyy"
-              renderCustomHeader={(headerProps) => (
-                <DatePickerHeader
-                  {...headerProps}
-                  minDate={MIN_GUARD_DATE}
-                  maxDate={new Date()}
-                />
-              )}
-              placeholderText="Selecciona la fecha de contratación"
-              isClearable
-              showPopperArrow={false}
-              wrapperClassName={styles.datePickerWrapper}
-              className={styles.datePickerInput}
-              calendarClassName={styles.datePickerCalendar}
-              popperClassName={styles.datePickerPopper}
-              aria-invalid={errors.hiredAt ? 'true' : undefined}
-            />
-          )}
-        />
-
-        {errors.hiredAt && (
-          <div className={styles.fieldError}>{errors.hiredAt.message}</div>
-        )}
-      </div>
-
-      <div className={styles.field}>
-        <div className={styles.fieldLabel}>Teléfono</div>
-
-        <Input
-          {...register('phone')}
-          aria-invalid={Boolean(errors.phone)}
-          placeholder="Ej. 844 123 4567"
-        />
-
-        {errors.phone && (
-          <div className={styles.fieldError}>{errors.phone.message}</div>
-        )}
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.fieldLabel}>RFC *</label>
-
-        <Input
-          {...register('rfc')}
-          aria-invalid={Boolean(errors.rfc)}
-          placeholder="Ej. GAMP940812KJ6"
-        />
-
-        {errors.rfc && (
-          <div className={styles.fieldError}>{errors.rfc.message}</div>
-        )}
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.fieldLabel}>CURP *</label>
-
-        <Input
-          {...register('curp')}
-          aria-invalid={Boolean(errors.curp)}
-          placeholder="Ej. GAMP940812HCLRRD08"
-        />
-
-        {errors.curp && (
-          <div className={styles.fieldError}>{errors.curp.message}</div>
-        )}
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.fieldLabel}>NSS *</label>
-
-        <Input
-          {...register('nss')}
-          aria-invalid={Boolean(errors.nss)}
-          placeholder="Ej. 72941583620"
-        />
-
-        {errors.nss && (
-          <div className={styles.fieldError}>{errors.nss.message}</div>
-        )}
-      </div>
-
-      <details className={styles.addressDetails} ref={addressDetailsRef}>
+      <details className={styles.addressDetails} ref={addressDetailRef}>
         <summary className={styles.addressSummary}>Agregar Dirección</summary>
         <div className={styles.addressGrid}>
           <div className={styles.field}>
@@ -317,7 +295,7 @@ export default function GuardForm({
             <Input
               {...register('street')}
               aria-invalid={Boolean(errors.street)}
-              placeholder="Ej. Calle Hidalgo"
+              placeholder="Ej. Av. Independencia"
             />
 
             {errors.street && (
@@ -331,7 +309,7 @@ export default function GuardForm({
             <Input
               {...register('exteriorNumber')}
               aria-invalid={Boolean(errors.exteriorNumber)}
-              placeholder="Ej. 418"
+              placeholder="Ej. 245"
             />
 
             {errors.exteriorNumber && (
@@ -347,7 +325,7 @@ export default function GuardForm({
             <Input
               {...register('interiorNumber')}
               aria-invalid={Boolean(errors.interiorNumber)}
-              placeholder="Ej. Depto. 3"
+              placeholder="Ej. Local 4"
             />
 
             {errors.interiorNumber && (
@@ -363,7 +341,7 @@ export default function GuardForm({
             <Input
               {...register('neighborhood')}
               aria-invalid={Boolean(errors.neighborhood)}
-              placeholder="Ej. República Oriente"
+              placeholder="Ej. Centro"
             />
 
             {errors.neighborhood && (
@@ -374,12 +352,12 @@ export default function GuardForm({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>Codigo Postal</label>
+            <label className={styles.fieldLabel}>Código postal</label>
 
             <Input
               {...register('postalCode')}
               aria-invalid={Boolean(errors.postalCode)}
-              placeholder="Ej. 25280"
+              placeholder="Ej. 27000"
             />
 
             {errors.postalCode && (
@@ -395,7 +373,7 @@ export default function GuardForm({
             <Input
               {...register('city')}
               aria-invalid={Boolean(errors.city)}
-              placeholder="Ej. Saltillo"
+              placeholder="Ej. Torreón"
             />
 
             {errors.city && (
@@ -409,7 +387,7 @@ export default function GuardForm({
             <Input
               {...register('municipality')}
               aria-invalid={Boolean(errors.municipality)}
-              placeholder="Ej. Saltillo"
+              placeholder="Ej. Torreón"
             />
 
             {errors.municipality && (
@@ -425,7 +403,7 @@ export default function GuardForm({
             <Input
               {...register('state')}
               aria-invalid={Boolean(errors.state)}
-              placeholder="Ej. Coahuila"
+              placeholder="Ej. Coahuila de Zaragoza"
             />
 
             {errors.state && (
@@ -434,7 +412,7 @@ export default function GuardForm({
           </div>
 
           <div className={styles.field}>
-            <label className={styles.fieldLabel}>Pais</label>
+            <label className={styles.fieldLabel}>País</label>
 
             <Input
               {...register('country')}

@@ -1,4 +1,3 @@
-'use client';
 import type { Guard } from '@segapp/contracts';
 
 import Modal from '@/components/ui/Modal';

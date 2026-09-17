@@ -1,11 +1,16 @@
-import { createContractSchema, updateContractSchema } from '@segapp/contracts';
+import {
+  createContractSchema,
+  updateContractSchema,
+  updateActiveStatusSchema,
+} from '@segapp/contracts';
+
 import {
   BadRequestException,
   Body,
   Controller,
   Get,
-  Patch,
   Post,
+  Patch,
   Param,
 } from '@nestjs/common';
 
@@ -32,9 +37,7 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    const { name } = result.data;
-
-    return this.service.create(name);
+    return this.service.create(result.data);
   }
 
   @Patch(':id')
@@ -49,13 +52,21 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    const { name } = result.data;
-
-    return this.service.update(id, name);
+    return this.service.update(id, result.data);
   }
 
-  @Patch(':id/toggle')
-  toggle(@Param('id') id: string) {
-    return this.service.toggleActive(id);
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() body: unknown) {
+    const result = updateActiveStatusSchema.safeParse(body);
+
+    if (!result.success) {
+      const message =
+        result.error.issues[0]?.message ??
+        'El estatus del contrato no es válido.';
+
+      throw new BadRequestException(message);
+    }
+
+    return this.service.updateActiveStatus(id, result.data.active);
   }
 }
