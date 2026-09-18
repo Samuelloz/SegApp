@@ -24,6 +24,9 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Local temporary files and database backups
+.tmp/
+
 # OS / Editor
 .DS_Store
 Thumbs.db
