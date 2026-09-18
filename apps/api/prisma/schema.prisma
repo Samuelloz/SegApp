@@ -12,6 +12,91 @@ datasource db {
   provider = "postgresql"
 }
 
+enum MembershipRole {
+  OWNER
+  ADMIN
+  SUPERVISOR
+  VIEWER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String
+  active          Boolean   @default(true)
+  emailVerifiedAt DateTime?
+
+  memberships     CompanyMembership[]
+  invitationsSent Invitation[]        @relation("InvitationSender")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompanyMembership {
+  id        String           @id @default(cuid())
+  role      MembershipRole
+  status    MembershipStatus @default(ACTIVE)
+  companyId String
+  userId    String
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, userId])
+  @@index([userId])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  membershipId String
+  expiresAt    DateTime
+  lastUsedAt   DateTime?
+  revokedAt    DateTime?
+  ipHash       String?
+  userAgent    String?
+
+  membership CompanyMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([membershipId])
+  @@index([expiresAt])
+}
+
+model Invitation {
+  id          String         @id @default(cuid())
+  email       String
+  role        MembershipRole
+  tokenHash   String         @unique
+  companyId   String
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  invitedBy User    @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId, email])
+  @@index([invitedById])
+  @@index([expiresAt])
+}
+
 model Company {
   id        String  @id @default(cuid())
   name      String
@@ -25,6 +110,8 @@ model Company {
   guards      Guard[]
   contracts   Contract[]
   assignments GuardAssignment[]
+  memberships CompanyMembership[]
+  invitations Invitation[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
