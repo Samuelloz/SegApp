@@ -20,6 +20,7 @@ describe('AuthService', () => {
 
   const sessionServiceMock = {
     create: jest.fn(),
+    revokeByToken: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -251,5 +252,15 @@ describe('AuthService', () => {
     ).rejects.toThrow('La cuenta no tiene acceso a una empresa activa.');
 
     expect(sessionServiceMock.create).not.toHaveBeenCalled();
+  });
+
+  it('cierra la sesión revocando el token recibido', async () => {
+    sessionServiceMock.revokeByToken.mockResolvedValue(undefined);
+
+    await service.logout('token-original');
+
+    expect(sessionServiceMock.revokeByToken).toHaveBeenCalledWith(
+      'token-original',
+    );
   });
 });

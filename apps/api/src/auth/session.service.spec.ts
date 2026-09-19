@@ -14,6 +14,7 @@ describe('SessionService', () => {
     session: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      updateMany: jest.fn(),
     },
   };
 
@@ -279,6 +280,48 @@ describe('SessionService', () => {
       await expect(service.findValidByToken('token-original')).rejects.toThrow(
         'La sesión no es válida o ha expirado.',
       );
+    });
+  });
+
+  describe('revokeByToken', () => {
+    const currentDate = new Date('2026-09-19T08:00:00.000Z');
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(currentDate);
+
+      sessionTokenServiceMock.hash.mockReturnValue('hash-del-token');
+    });
+
+    it('revoca la sesión correspondiente al token', async () => {
+      prismaMock.session.updateMany.mockResolvedValue({
+        count: 1,
+      });
+
+      await service.revokeByToken('token-original');
+
+      expect(sessionTokenServiceMock.hash).toHaveBeenCalledWith(
+        'token-original',
+      );
+      expect(prismaMock.session.updateMany).toHaveBeenCalledWith({
+        where: {
+          tokenHash: 'hash-del-token',
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: currentDate,
+        },
+      });
+    });
+
+    it('no falla cuando la sesión no existe o ya estaba revocada', async () => {
+      prismaMock.session.updateMany.mockResolvedValue({
+        count: 0,
+      });
+
+      await expect(
+        service.revokeByToken('token-inexistente'),
+      ).resolves.toBeUndefined();
     });
   });
 });

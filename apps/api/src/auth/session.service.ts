@@ -87,4 +87,18 @@ export class SessionService {
 
     return session;
   }
+
+  async revokeByToken(token: string): Promise<void> {
+    const tokenHash = this.sessionTokenService.hash(token);
+
+    await this.prisma.session.updateMany({
+      where: {
+        tokenHash,
+        revokedAt: null,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+  }
 }

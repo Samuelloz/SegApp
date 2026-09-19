@@ -5,6 +5,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
   Req,
   Res,
@@ -14,7 +16,11 @@ import {
 
 import type { Response } from 'express';
 
-import { INVALID_SESSION_MESSAGE, SESSION_COOKIE_NAME } from './auth.constants';
+import {
+  INVALID_SESSION_MESSAGE,
+  SESSION_COOKIE_NAME,
+  SESSION_COOKIE_OPTIONS,
+} from './auth.constants';
 import { AuthService } from './auth.service';
 import {
   type AuthenticatedRequest,
@@ -43,10 +49,7 @@ export class AuthController {
     const { token, currentSession } = await this.authService.login(result.data);
 
     response.cookie(SESSION_COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
+      ...SESSION_COOKIE_OPTIONS,
       expires: new Date(currentSession.expiresAt),
     });
 
@@ -74,5 +77,22 @@ export class AuthController {
       session.membership,
       session.expiresAt,
     );
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(
+    @Req() request: AuthenticatedRequest,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    const token = request.cookies?.[SESSION_COOKIE_NAME];
+
+    if (typeof token === 'string' && token.length > 0) {
+      await this.authService.logout(token);
+    }
+
+    response.clearCookie(SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS);
+
+    response.setHeader('Cache-Control', 'no-store');
   }
 }

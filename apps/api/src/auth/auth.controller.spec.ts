@@ -1,11 +1,15 @@
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { GUARDS_METADATA } from '@nestjs/common/constants';
+import {
+  BadRequestException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { GUARDS_METADATA, HTTP_CODE_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import type { Response } from 'express';
 
-import { SESSION_COOKIE_NAME } from './auth.constants';
+import { SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS } from './auth.constants';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import {
@@ -18,6 +22,7 @@ describe('AuthController', () => {
 
   const authServiceMock = {
     login: jest.fn(),
+    logout: jest.fn(),
     toCurrentSessionResponse: jest.fn(),
   };
 
@@ -26,6 +31,7 @@ describe('AuthController', () => {
   };
 
   const responseMock = {
+    clearCookie: jest.fn(),
     cookie: jest.fn(),
     setHeader: jest.fn(),
   };
@@ -218,4 +224,77 @@ describe('AuthController', () => {
     expect(result).not.toHaveProperty('token');
     expect(result).not.toHaveProperty('tokenHash');
   });
+
+  it('configura el cierre de sesión para responder sin contenido', () => {
+    const reflector = new Reflector();
+    const statusCode = reflector.get<number>(
+      HTTP_CODE_METADATA,
+      // Solo se usa la referencia del método para leer sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      AuthController.prototype.logout,
+    );
+
+    expect(statusCode).toBe(HttpStatus.NO_CONTENT);
+  });
+
+  it('revoca la sesión y elimina la cookie cuando recibe un token', async () => {
+    const request = {
+      cookies: {
+        [SESSION_COOKIE_NAME]: 'token-original',
+      },
+    } as AuthenticatedRequest;
+
+    authServiceMock.logout.mockResolvedValue(undefined);
+
+    await controller.logout(request, responseMock as unknown as Response);
+
+    expect(authServiceMock.logout).toHaveBeenCalledWith('token-original');
+    expect(responseMock.clearCookie).toHaveBeenCalledWith(
+      SESSION_COOKIE_NAME,
+      SESSION_COOKIE_OPTIONS,
+    );
+    expect(responseMock.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'no-store',
+    );
+  });
+
+  it.each([
+    ['cookies ausentes', {}],
+    ['cookie de sesión ausente', { cookies: {} }],
+    [
+      'cookie de sesión vacía',
+      {
+        cookies: {
+          [SESSION_COOKIE_NAME]: '',
+        },
+      },
+    ],
+    [
+      'cookie de sesión con un valor que no es texto',
+      {
+        cookies: {
+          [SESSION_COOKIE_NAME]: 123,
+        },
+      },
+    ],
+  ])(
+    'elimina la cookie aunque la petición tenga %s',
+    async (_scenario, request) => {
+      await controller.logout(
+        request as AuthenticatedRequest,
+        responseMock as unknown as Response,
+      );
+
+      expect(authServiceMock.logout).not.toHaveBeenCalled();
+      expect(responseMock.clearCookie).toHaveBeenCalledWith(
+        SESSION_COOKIE_NAME,
+        SESSION_COOKIE_OPTIONS,
+      );
+      expect(responseMock.setHeader).toHaveBeenCalledWith(
+        'Cache-Control',
+        'no-store',
+      );
+    },
+  );
 });
