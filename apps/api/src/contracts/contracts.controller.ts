@@ -1,7 +1,7 @@
 import {
   createContractSchema,
-  updateContractSchema,
   updateActiveStatusSchema,
+  updateContractSchema,
 } from '@segapp/contracts';
 
 import {
@@ -9,24 +9,28 @@ import {
   Body,
   Controller,
   Get,
-  Post,
-  Patch,
   Param,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
 
+import { CurrentCompanyId } from '../auth/current-company-id.decorator';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { ContractsService } from './contracts.service';
 
+@UseGuards(SessionAuthGuard)
 @Controller('contracts')
 export class ContractsController {
   constructor(private service: ContractsService) {}
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@CurrentCompanyId() companyId: string) {
+    return this.service.findAll(companyId);
   }
 
   @Post()
-  create(@Body() body: unknown) {
+  create(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = createContractSchema.safeParse(body);
 
     if (!result.success) {
@@ -37,11 +41,15 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    return this.service.create(result.data);
+    return this.service.create(companyId, result.data);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: unknown) {
+  update(
+    @CurrentCompanyId() companyId: string,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
     const result = updateContractSchema.safeParse(body);
 
     if (!result.success) {
@@ -52,11 +60,15 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    return this.service.update(id, result.data);
+    return this.service.update(companyId, id, result.data);
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() body: unknown) {
+  updateStatus(
+    @CurrentCompanyId() companyId: string,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
     const result = updateActiveStatusSchema.safeParse(body);
 
     if (!result.success) {
@@ -67,6 +79,6 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    return this.service.updateActiveStatus(id, result.data.active);
+    return this.service.updateActiveStatus(companyId, id, result.data.active);
   }
 }
