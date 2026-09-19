@@ -1,10 +1,11 @@
+import type { Company, CompanyMembership, User } from '@prisma/client';
+import type { CurrentSessionResponse, LoginInput } from '@segapp/contracts';
+
 import {
   ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-
-import type { CurrentSessionResponse, LoginInput } from '@segapp/contracts';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
@@ -12,6 +13,10 @@ import { SessionService } from './session.service';
 
 const INVALID_CREDENTIALS_MESSAGE =
   'Correo electrónico o contraseña incorrectos.';
+
+type MembershipWithCompany = CompanyMembership & {
+  company: Pick<Company, 'id' | 'name' | 'slug'>;
+};
 
 @Injectable()
 export class AuthService {
@@ -60,6 +65,37 @@ export class AuthService {
     };
   }
 
+  toCurrentSessionResponse(
+    user: Omit<User, 'passwordHash'>,
+    membership: MembershipWithCompany,
+    expiresAt: Date,
+  ): CurrentSessionResponse {
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        active: user.active,
+        emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+      },
+      membership: {
+        id: membership.id,
+        role: membership.role,
+        status: membership.status,
+        company: {
+          id: membership.company.id,
+          name: membership.company.name,
+          slug: membership.company.slug,
+        },
+        createdAt: membership.createdAt.toISOString(),
+        updatedAt: membership.updatedAt.toISOString(),
+      },
+      expiresAt: expiresAt.toISOString(),
+    };
+  }
+
   async login(input: LoginInput) {
     const authenticatedUser = await this.authenticateCredentials(
       input.email,
@@ -76,31 +112,11 @@ export class AuthService {
 
     const { token, session } = await this.sessionService.create(membership.id);
 
-    const currentSession = {
-      user: {
-        id: authenticatedUser.id,
-        email: authenticatedUser.email,
-        name: authenticatedUser.name,
-        active: authenticatedUser.active,
-        emailVerifiedAt:
-          authenticatedUser.emailVerifiedAt?.toISOString() ?? null,
-        createdAt: authenticatedUser.createdAt.toISOString(),
-        updatedAt: authenticatedUser.updatedAt.toISOString(),
-      },
-      membership: {
-        id: membership.id,
-        role: membership.role,
-        status: membership.status,
-        company: {
-          id: membership.company.id,
-          name: membership.company.name,
-          slug: membership.company.slug,
-        },
-        createdAt: membership.createdAt.toISOString(),
-        updatedAt: membership.updatedAt.toISOString(),
-      },
-      expiresAt: session.expiresAt.toISOString(),
-    } satisfies CurrentSessionResponse;
+    const currentSession = this.toCurrentSessionResponse(
+      authenticatedUser,
+      membership,
+      session.expiresAt,
+    );
 
     return {
       token,

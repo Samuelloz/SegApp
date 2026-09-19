@@ -4,14 +4,22 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
+  Req,
   Res,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 
 import type { Response } from 'express';
 
+import { INVALID_SESSION_MESSAGE, SESSION_COOKIE_NAME } from './auth.constants';
 import { AuthService } from './auth.service';
-import { SESSION_COOKIE_NAME } from './auth.constants';
+import {
+  type AuthenticatedRequest,
+  SessionAuthGuard,
+} from './session-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -45,5 +53,26 @@ export class AuthController {
     response.setHeader('Cache-Control', 'no-store');
 
     return currentSession;
+  }
+
+  @UseGuards(SessionAuthGuard)
+  @Get('session')
+  getCurrentSession(
+    @Req() request: AuthenticatedRequest,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const session = request.currentSession;
+
+    if (!session) {
+      throw new UnauthorizedException(INVALID_SESSION_MESSAGE);
+    }
+
+    response.setHeader('Cache-Control', 'no-store');
+
+    return this.authService.toCurrentSessionResponse(
+      session.membership.user,
+      session.membership,
+      session.expiresAt,
+    );
   }
 }

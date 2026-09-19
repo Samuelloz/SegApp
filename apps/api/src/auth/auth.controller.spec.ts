@@ -1,4 +1,6 @@
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
+import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import type { Response } from 'express';
@@ -6,12 +8,21 @@ import type { Response } from 'express';
 import { SESSION_COOKIE_NAME } from './auth.constants';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import {
+  type AuthenticatedRequest,
+  SessionAuthGuard,
+} from './session-auth.guard';
 
 describe('AuthController', () => {
   let controller: AuthController;
 
   const authServiceMock = {
     login: jest.fn(),
+    toCurrentSessionResponse: jest.fn(),
+  };
+
+  const sessionAuthGuardMock = {
+    canActivate: jest.fn(),
   };
 
   const responseMock = {
@@ -55,7 +66,10 @@ describe('AuthController', () => {
           useValue: authServiceMock,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(SessionAuthGuard)
+      .useValue(sessionAuthGuardMock)
+      .compile();
 
     controller = module.get<AuthController>(AuthController);
   });
@@ -130,5 +144,78 @@ describe('AuthController', () => {
 
     expect(responseMock.cookie).not.toHaveBeenCalled();
     expect(responseMock.setHeader).not.toHaveBeenCalled();
+  });
+
+  it('protege la consulta de sesión con SessionAuthGuard', () => {
+    const reflector = new Reflector();
+    const guards = reflector.get<unknown[]>(
+      GUARDS_METADATA,
+      // Solo se usa la referencia del método para leer sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      AuthController.prototype.getCurrentSession,
+    );
+
+    expect(guards).toContain(SessionAuthGuard);
+  });
+
+  it('rechaza la consulta cuando la petición no contiene una sesión', () => {
+    const request = {} as AuthenticatedRequest;
+
+    expect(() =>
+      controller.getCurrentSession(
+        request,
+        responseMock as unknown as Response,
+      ),
+    ).toThrow(UnauthorizedException);
+
+    expect(authServiceMock.toCurrentSessionResponse).not.toHaveBeenCalled();
+    expect(responseMock.setHeader).not.toHaveBeenCalled();
+  });
+
+  it('devuelve la sesión actual sin exponer datos sensibles', () => {
+    const expiresAt = new Date('2026-09-19T20:00:00.000Z');
+    const user = {
+      id: 'user-1',
+      email: 'usuario@segapp.test',
+      name: 'Rosario López',
+      active: true,
+    };
+    const membership = {
+      id: 'membership-1',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      user,
+      company: {
+        id: 'company-1',
+        name: 'Seguridad del Norte',
+        slug: 'seguridad-del-norte',
+      },
+    };
+    const request = {
+      currentSession: {
+        expiresAt,
+        membership,
+      },
+    } as unknown as AuthenticatedRequest;
+
+    authServiceMock.toCurrentSessionResponse.mockReturnValue(currentSession);
+
+    const result = controller.getCurrentSession(
+      request,
+      responseMock as unknown as Response,
+    );
+
+    expect(authServiceMock.toCurrentSessionResponse).toHaveBeenCalledWith(
+      user,
+      membership,
+      expiresAt,
+    );
+    expect(responseMock.setHeader).toHaveBeenCalledWith(
+      'Cache-Control',
+      'no-store',
+    );
+    expect(result).toEqual(currentSession);
+    expect(result).not.toHaveProperty('token');
+    expect(result).not.toHaveProperty('tokenHash');
   });
 });
