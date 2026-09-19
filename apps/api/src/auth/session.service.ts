@@ -5,14 +5,13 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { INVALID_SESSION_MESSAGE } from './auth.constants';
 import { SessionTokenService } from './session-token.service';
 
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000;
 
 const INACTIVE_MEMBERSHIP_MESSAGE =
   'La cuenta no tiene acceso a una empresa activa.';
-
-const INVALID_SESSION_MESSAGE = 'La sesión no es válida o ha expirado.';
 
 @Injectable()
 export class SessionService {

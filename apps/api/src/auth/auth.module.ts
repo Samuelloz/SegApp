@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
 import { SessionService } from './session.service';
 import { SessionTokenService } from './session-token.service';
+import { SessionAuthGuard } from './session-auth.guard';
 
 @Module({
   controllers: [AuthController],
@@ -13,7 +14,14 @@ import { SessionTokenService } from './session-token.service';
     PasswordService,
     SessionService,
     SessionTokenService,
+    SessionAuthGuard,
   ],
-  exports: [AuthService, PasswordService, SessionService, SessionTokenService],
+  exports: [
+    AuthService,
+    PasswordService,
+    SessionService,
+    SessionTokenService,
+    SessionAuthGuard,
+  ],
 })
 export class AuthModule {}
