@@ -1,24 +1,30 @@
 import { updateCompanySchema } from '@segapp/contracts';
-import { CompaniesService, UpdateCompanyData } from './companies.service';
+
 import {
   BadRequestException,
   Body,
   Controller,
   Get,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 
+import { CurrentCompanyId } from '../auth/current-company-id.decorator';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
+import { CompaniesService, type UpdateCompanyData } from './companies.service';
+
+@UseGuards(SessionAuthGuard)
 @Controller('companies')
 export class CompaniesController {
-  constructor(private service: CompaniesService) { }
+  constructor(private readonly service: CompaniesService) {}
 
   @Get('current')
-  findCurrent() {
-    return this.service.findCurrent();
+  findCurrent(@CurrentCompanyId() companyId: string) {
+    return this.service.findCurrent(companyId);
   }
 
   @Patch('current')
-  updateCurrent(@Body() body: unknown) {
+  updateCurrent(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = updateCompanySchema.safeParse(body);
 
     if (!result.success) {
@@ -45,6 +51,6 @@ export class CompaniesController {
       data.address = result.data.address || null;
     }
 
-    return this.service.updateCurrent(data);
+    return this.service.updateCurrent(companyId, data);
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { PrismaService } from '../prisma/prisma.service';
-import { DEFAULT_COMPANY_ID } from './company.constants';
 
 export type UpdateCompanyData = {
   name?: string;
@@ -14,10 +14,10 @@ export type UpdateCompanyData = {
 export class CompaniesService {
   constructor(private prisma: PrismaService) {}
 
-  async findCurrent() {
+  async findCurrent(companyId: string) {
     const company = await this.prisma.company.findFirst({
       where: {
-        id: DEFAULT_COMPANY_ID,
+        id: companyId,
         deletedAt: null,
       },
     });
@@ -29,12 +29,12 @@ export class CompaniesService {
     return company;
   }
 
-  async updateCurrent(data: UpdateCompanyData) {
-    await this.findCurrent();
+  async updateCurrent(companyId: string, data: UpdateCompanyData) {
+    await this.findCurrent(companyId);
 
     return this.prisma.company.update({
       where: {
-        id: DEFAULT_COMPANY_ID,
+        id: companyId,
       },
       data,
     });
