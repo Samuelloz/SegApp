@@ -19,14 +19,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
-        memberships: {
-          where: {
-            status: 'ACTIVE',
-            company: {
-              active: true,
-              deletedAt: null,
-            },
-          },
+        membership: {
           include: {
             company: true,
           },
@@ -53,7 +46,7 @@ export class AuthService {
       name: user.name,
       active: user.active,
       emailVerifiedAt: user.emailVerifiedAt,
-      memberships: user.memberships,
+      membership: user.membership,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

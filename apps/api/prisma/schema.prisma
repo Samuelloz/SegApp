@@ -32,8 +32,8 @@ model User {
   active          Boolean   @default(true)
   emailVerifiedAt DateTime?
 
-  memberships     CompanyMembership[]
-  invitationsSent Invitation[]        @relation("InvitationSender")
+  membership      CompanyMembership?
+  invitationsSent Invitation[]       @relation("InvitationSender")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -44,7 +44,7 @@ model CompanyMembership {
   role      MembershipRole
   status    MembershipStatus @default(ACTIVE)
   companyId String
-  userId    String
+  userId    String           @unique
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
   user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
@@ -53,9 +53,6 @@ model CompanyMembership {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([companyId, userId])
-  @@index([userId])
 }
 
 model Session {

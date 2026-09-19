@@ -47,7 +47,7 @@ describe('AuthService', () => {
       emailVerifiedAt: null,
       createdAt: new Date('2026-09-18T00:00:00.000Z'),
       updatedAt: new Date('2026-09-18T00:00:00.000Z'),
-      memberships: [],
+      membership: null,
     });
 
     passwordServiceMock.verify.mockResolvedValue(true);
@@ -103,7 +103,7 @@ describe('AuthService', () => {
       emailVerifiedAt: null,
       createdAt: new Date('2026-09-18T00:00:00.000Z'),
       updatedAt: new Date('2026-09-18T00:00:00.000Z'),
-      memberships: [],
+      membership: null,
     });
 
     await expect(
@@ -126,7 +126,7 @@ describe('AuthService', () => {
       emailVerifiedAt: null,
       createdAt: new Date('2026-09-18T00:00:00.000Z'),
       updatedAt: new Date('2026-09-18T00:00:00.000Z'),
-      memberships: [],
+      membership: null,
     });
 
     passwordServiceMock.verify.mockResolvedValue(false);
