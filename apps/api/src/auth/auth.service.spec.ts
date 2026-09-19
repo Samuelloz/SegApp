@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
+import { SessionService } from './session.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -17,8 +18,12 @@ describe('AuthService', () => {
     verify: jest.fn(),
   };
 
+  const sessionServiceMock = {
+    create: jest.fn(),
+  };
+
   beforeEach(async () => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -30,6 +35,10 @@ describe('AuthService', () => {
         {
           provide: PasswordService,
           useValue: passwordServiceMock,
+        },
+        {
+          provide: SessionService,
+          useValue: sessionServiceMock,
         },
       ],
     }).compile();
@@ -142,5 +151,105 @@ describe('AuthService', () => {
       'hash-guardado',
       'contraseña incorrecta',
     );
+  });
+
+  it('inicia sesión para un usuario con membresía', async () => {
+    const emailVerifiedAt = new Date('2026-09-17T12:00:00.000Z');
+    const userCreatedAt = new Date('2026-09-18T08:00:00.000Z');
+    const userUpdatedAt = new Date('2026-09-18T09:00:00.000Z');
+    const membershipCreatedAt = new Date('2026-09-18T10:00:00.000Z');
+    const membershipUpdatedAt = new Date('2026-09-18T11:00:00.000Z');
+    const expiresAt = new Date('2026-09-19T00:00:00.000Z');
+
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'user-1',
+      email: 'usuario@segapp.test',
+      passwordHash: 'hash-guardado',
+      name: 'Rosario López',
+      active: true,
+      emailVerifiedAt,
+      createdAt: userCreatedAt,
+      updatedAt: userUpdatedAt,
+      membership: {
+        id: 'membership-1',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        createdAt: membershipCreatedAt,
+        updatedAt: membershipUpdatedAt,
+        company: {
+          id: 'company-1',
+          name: 'Seguridad del Norte',
+          slug: 'seguridad-del-norte',
+        },
+      },
+    });
+
+    passwordServiceMock.verify.mockResolvedValue(true);
+
+    sessionServiceMock.create.mockResolvedValue({
+      token: 'token-original',
+      session: {
+        expiresAt,
+      },
+    });
+
+    const result = await service.login({
+      email: 'usuario@segapp.test',
+      password: 'una contraseña segura',
+    });
+
+    expect(sessionServiceMock.create).toHaveBeenCalledWith('membership-1');
+    expect(result).toEqual({
+      token: 'token-original',
+      currentSession: {
+        user: {
+          id: 'user-1',
+          email: 'usuario@segapp.test',
+          name: 'Rosario López',
+          active: true,
+          emailVerifiedAt: emailVerifiedAt.toISOString(),
+          createdAt: userCreatedAt.toISOString(),
+          updatedAt: userUpdatedAt.toISOString(),
+        },
+        membership: {
+          id: 'membership-1',
+          role: 'ADMIN',
+          status: 'ACTIVE',
+          company: {
+            id: 'company-1',
+            name: 'Seguridad del Norte',
+            slug: 'seguridad-del-norte',
+          },
+          createdAt: membershipCreatedAt.toISOString(),
+          updatedAt: membershipUpdatedAt.toISOString(),
+        },
+        expiresAt: expiresAt.toISOString(),
+      },
+    });
+  });
+
+  it('rechaza el inicio de sesión de un usuario sin membresía', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'user-1',
+      email: 'usuario@segapp.test',
+      passwordHash: 'hash-guardado',
+      name: 'Rosario López',
+      active: true,
+      emailVerifiedAt: null,
+      createdAt: new Date('2026-09-18T08:00:00.000Z'),
+      updatedAt: new Date('2026-09-18T09:00:00.000Z'),
+      membership: null,
+    });
+
+    passwordServiceMock.verify.mockResolvedValue(true);
+
+    await expect(
+      service.login({
+        email: 'usuario@segapp.test',
+        password: 'una contraseña segura',
+      }),
+    ).rejects.toThrow('La cuenta no tiene acceso a una empresa activa.');
+
+    expect(sessionServiceMock.create).not.toHaveBeenCalled();
   });
 });
