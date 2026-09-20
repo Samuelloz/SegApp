@@ -13,3 +13,6 @@ export const SESSION_COOKIE_OPTIONS = {
 } satisfies CookieOptions;
 
 export const INVALID_SESSION_MESSAGE = 'La sesión no es válida o ha expirado.';
+
+export const INSUFFICIENT_PERMISSIONS_MESSAGE =
+  'No tienes permisos para realizar esta acción.';
