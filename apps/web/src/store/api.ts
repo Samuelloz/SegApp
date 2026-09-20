@@ -5,9 +5,11 @@ import type {
   CreateAssignmentInput,
   CreateContractInput,
   CreateGuardInput,
+  CurrentSessionResponse,
   EndAssignmentInput,
   Guard,
   GuardAssignment,
+  LoginInput,
   UpdateCompanyInput,
   UpdateContractInput,
   UpdateGuardInput,
@@ -18,9 +20,32 @@ export const api = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || '/api',
+    credentials: 'include',
   }),
-  tagTypes: ['Company', 'Contracts', 'Guards', 'Assignments'],
+  tagTypes: ['Session', 'Company', 'Contracts', 'Guards', 'Assignments'],
   endpoints: (builder) => ({
+    login: builder.mutation<CurrentSessionResponse, LoginInput>({
+      query: (body) => ({
+        url: '/auth/login',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Session'],
+    }),
+
+    getCurrentSession: builder.query<CurrentSessionResponse, void>({
+      query: () => '/auth/session',
+      providesTags: ['Session'],
+    }),
+
+    logout: builder.mutation<void, void>({
+      query: () => ({
+        url: '/auth/logout',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Session'],
+    }),
+
     getCurrentCompany: builder.query<Company, void>({
       query: () => '/companies/current',
       providesTags: ['Company'],
@@ -157,6 +182,10 @@ export const api = createApi({
 });
 
 export const {
+  useLoginMutation,
+  useGetCurrentSessionQuery,
+  useLogoutMutation,
+
   useGetCurrentCompanyQuery,
   useUpdateCurrentCompanyMutation,
 
