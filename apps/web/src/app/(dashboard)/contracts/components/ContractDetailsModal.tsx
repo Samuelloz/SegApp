@@ -4,10 +4,7 @@ import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 
-import {
-  formatContractDate,
-  getContractAddress,
-} from '@/app/contracts/contract.utils';
+import { formatContractDate, getContractAddress } from '../contract.utils';
 
 import styles from './ContractDetailsModal.module.css';
 

@@ -2,7 +2,6 @@ import './globals.css';
 import 'react-datepicker/dist/react-datepicker.css';
 
 import Providers from './providers';
-import AppShell from '@/components/layout/AppShell';
 import AppToaster from '@/components/ui/AppToaster';
 
 export default function RootLayout({
@@ -13,9 +12,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
-        <Providers>
-          <AppShell>{children}</AppShell>
-        </Providers>
+        <Providers>{children}</Providers>
 
         <AppToaster />
       </body>
