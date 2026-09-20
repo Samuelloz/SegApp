@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { LogOut, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import { toast } from 'sonner';
 
-import { usePathname } from 'next/navigation';
-import { useGetCurrentCompanyQuery } from '@/store/api';
-
-import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import { api, useGetCurrentCompanyQuery, useLogoutMutation } from '@/store/api';
+import { useAppDispatch } from '@/store/hooks';
 
 import { MAIN_NAVIGATION_ITEMS, SETTINGS_NAVIGATION_ITEM } from './navigation';
 
@@ -25,12 +27,42 @@ export default function Sidebar({
   onToggleCollapse,
 }: SidebarProps) {
   const pathName = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
+
   const { data: company } = useGetCurrentCompanyQuery();
   const SettingsIcon = SETTINGS_NAVIGATION_ITEM.icon;
   const CollapseIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
 
   function handleNavigationClick() {
     onClose();
+  }
+
+  async function handleLogout(): Promise<void> {
+    const toastId = toast.loading('Cerrando sesión...');
+
+    try {
+      await logout().unwrap();
+
+      dispatch(api.util.resetApiState());
+      onClose();
+
+      toast.success('Sesión cerrada correctamente.', {
+        id: toastId,
+      });
+
+      router.replace('/login');
+      router.refresh();
+    } catch (error: unknown) {
+      toast.error(
+        getApiErrorMessage(error, 'No fue posible cerrar la sesión.'),
+        {
+          id: toastId,
+        },
+      );
+    }
   }
 
   function isHrefActive(href: string): boolean {
@@ -92,7 +124,10 @@ export default function Sidebar({
         })}
       </nav>
 
-      <nav className={styles.settingsNavigation} aria-label="Configuración">
+      <nav
+        className={styles.settingsNavigation}
+        aria-label="Configuración y sesión"
+      >
         <Link
           className={`${styles.link} ${isHrefActive(SETTINGS_NAVIGATION_ITEM.href) ? styles.active : ''}`}
           onClick={handleNavigationClick}
@@ -105,6 +140,19 @@ export default function Sidebar({
             {SETTINGS_NAVIGATION_ITEM.label}
           </span>
         </Link>
+
+        <button
+          type="button"
+          className={`${styles.link} ${styles.logoutButton}`}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
+          <LogOut className={styles.linkIcon} aria-hidden="true" />
+
+          <span className={styles.linkLabel}>
+            {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+          </span>
+        </button>
       </nav>
     </aside>
   );
