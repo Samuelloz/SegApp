@@ -4,17 +4,24 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@segapp/contracts';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
-import { useLoginMutation } from '@/store/api';
+import { useGetCurrentSessionQuery, useLoginMutation } from '@/store/api';
 
 import styles from './login.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
+
+  const { data: session, isLoading: isCheckingSession } =
+    useGetCurrentSessionQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+    });
+
   const [login, { isLoading }] = useLoginMutation();
 
   const {
@@ -28,6 +35,12 @@ export default function LoginPage() {
       password: '',
     },
   });
+
+  useEffect(() => {
+    if (session) {
+      router.replace('/guards');
+    }
+  }, [router, session]);
 
   async function onSubmit(values: LoginInput): Promise<void> {
     const toastId = toast.loading('Iniciando sesión...');
@@ -46,6 +59,16 @@ export default function LoginPage() {
         id: toastId,
       });
     }
+  }
+
+  if (isCheckingSession || session) {
+    return (
+      <main className={styles.page}>
+        <p className={styles.status}>
+          {session ? 'Redirigiendo al panel...' : 'Verificando sesión...'}
+        </p>
+      </main>
+    );
   }
 
   return (

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import RequireSession from '@/components/auth/RequireSession';
 import AppShell from '@/components/layout/AppShell';
 
 type DashboardLayoutProps = {
@@ -7,5 +8,9 @@ type DashboardLayoutProps = {
 };
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <RequireSession>
+      <AppShell>{children}</AppShell>
+    </RequireSession>
+  );
 }
