@@ -9,11 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+
 import { CurrentCompanyId } from '../auth/current-company-id.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { CompaniesService, type UpdateCompanyData } from './companies.service';
 
-@UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard, RolesGuard)
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly service: CompaniesService) {}
@@ -24,6 +27,7 @@ export class CompaniesController {
   }
 
   @Patch('current')
+  @Roles('OWNER', 'ADMIN')
   updateCurrent(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = updateCompanySchema.safeParse(body);
 

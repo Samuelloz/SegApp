@@ -1,8 +1,11 @@
+import type { MembershipRole } from '@segapp/contracts';
 import { BadRequestException } from '@nestjs/common';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { ROLES_KEY } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { CompaniesController } from './companies.controller';
 import { CompaniesService } from './companies.service';
@@ -38,14 +41,38 @@ describe('CompaniesController', () => {
     controller = module.get<CompaniesController>(CompaniesController);
   });
 
-  it('protege todas las rutas de empresas con SessionAuthGuard', () => {
+  it('protege todas las rutas de empresas con los guards en el orden correcto', () => {
     const reflector = new Reflector();
     const guards = reflector.get<unknown[]>(
       GUARDS_METADATA,
       CompaniesController,
     );
 
-    expect(guards).toContain(SessionAuthGuard);
+    expect(guards).toEqual([SessionAuthGuard, RolesGuard]);
+  });
+
+  it('permite consultar la empresa sin restringir roles', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se usa la referencia del método para leer sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      CompaniesController.prototype.findCurrent,
+    );
+
+    expect(roles).toBeUndefined();
+  });
+
+  it('limita la actualización de la empresa a OWNER y ADMIN', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se usa la referencia del método para leer sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      CompaniesController.prototype.updateCurrent,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN']);
   });
 
   it('consulta la empresa obtenida desde la sesión', async () => {
