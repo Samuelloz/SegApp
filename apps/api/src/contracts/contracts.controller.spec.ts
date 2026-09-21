@@ -1,8 +1,11 @@
+import type { MembershipRole } from '@segapp/contracts';
 import { BadRequestException } from '@nestjs/common';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { ROLES_KEY } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { ContractsController } from './contracts.controller';
 import { ContractsService } from './contracts.service';
@@ -50,14 +53,62 @@ describe('ContractsController', () => {
     controller = module.get<ContractsController>(ContractsController);
   });
 
-  it('protege todas las rutas de contratos con SessionAuthGuard', () => {
+  it('protege las rutas con sesión antes de comprobar roles', () => {
     const reflector = new Reflector();
     const guards = reflector.get<unknown[]>(
       GUARDS_METADATA,
       ContractsController,
     );
 
-    expect(guards).toContain(SessionAuthGuard);
+    expect(guards).toEqual([SessionAuthGuard, RolesGuard]);
+  });
+
+  it('permite consultar contratos a cualquier usuario autenticado', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se lee la referencia del método para consultar sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      ContractsController.prototype.findAll,
+    );
+
+    expect(roles).toBeUndefined();
+  });
+
+  it('permite crear contratos a propietario, administrador, ventas y encargado de contratos', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se lee la referencia del método para consultar sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      ContractsController.prototype.create,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'SALES', 'CONTRACT_MANAGER']);
+  });
+
+  it('permite editar contratos a propietario, administrador, ventas y encargado de contratos', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se lee la referencia del método para consultar sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      ContractsController.prototype.update,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'SALES', 'CONTRACT_MANAGER']);
+  });
+
+  it('reserva el cambio de estatus a propietario, administrador y encargado de contratos', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se lee la referencia del método para consultar sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      ContractsController.prototype.updateStatus,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'CONTRACT_MANAGER']);
   });
 
   it('lista los contratos de la empresa obtenida desde la sesión', async () => {
