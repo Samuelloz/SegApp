@@ -16,10 +16,12 @@ import {
 } from '@nestjs/common';
 
 import { CurrentCompanyId } from '../auth/current-company-id.decorator';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { GuardService } from './guards.service';
 
-@UseGuards(SessionAuthGuard)
+@UseGuards(SessionAuthGuard, RolesGuard)
 @Controller('guards')
 export class GuardsController {
   constructor(private service: GuardService) {}
@@ -30,6 +32,7 @@ export class GuardsController {
   }
 
   @Post()
+  @Roles('OWNER', 'ADMIN', 'GUARD_MANAGER')
   create(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = createGuardSchema.safeParse(body);
 
@@ -45,6 +48,7 @@ export class GuardsController {
   }
 
   @Patch(':id')
+  @Roles('OWNER', 'ADMIN', 'GUARD_MANAGER')
   update(
     @CurrentCompanyId() companyId: string,
     @Param('id') id: string,
@@ -64,6 +68,7 @@ export class GuardsController {
   }
 
   @Patch(':id/status')
+  @Roles('OWNER', 'ADMIN', 'GUARD_MANAGER')
   updateStatus(
     @CurrentCompanyId() companyId: string,
     @Param('id') id: string,
