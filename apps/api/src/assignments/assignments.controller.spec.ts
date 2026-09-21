@@ -1,8 +1,11 @@
+import type { MembershipRole } from '@segapp/contracts';
 import { BadRequestException } from '@nestjs/common';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { ROLES_KEY } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { AssignmentsController } from './assignments.controller';
 import { AssignmentsService } from './assignments.service';
@@ -39,14 +42,50 @@ describe('AssignmentsController', () => {
     controller = module.get<AssignmentsController>(AssignmentsController);
   });
 
-  it('protege todas las rutas de asignaciones con SessionAuthGuard', () => {
+  it('protege las rutas con sesión antes de comprobar roles', () => {
     const reflector = new Reflector();
     const guards = reflector.get<unknown[]>(
       GUARDS_METADATA,
       AssignmentsController,
     );
 
-    expect(guards).toContain(SessionAuthGuard);
+    expect(guards).toEqual([SessionAuthGuard, RolesGuard]);
+  });
+
+  it('permite consultar asignaciones a cualquier usuario autenticado', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se lee la referencia del método para consultar sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      AssignmentsController.prototype.findAll,
+    );
+
+    expect(roles).toBeUndefined();
+  });
+
+  it('permite asignar guardias a propietario, administrador, supervisor y encargado de guardias', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se lee la referencia del método para consultar sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      AssignmentsController.prototype.create,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'SUPERVISOR', 'GUARD_MANAGER']);
+  });
+
+  it('permite finalizar asignaciones a propietario, administrador, supervisor y encargado de guardias', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se lee la referencia del método para consultar sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      AssignmentsController.prototype.endAssignment,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'SUPERVISOR', 'GUARD_MANAGER']);
   });
 
   it('lista las asignaciones de la empresa obtenida desde la sesión', async () => {
