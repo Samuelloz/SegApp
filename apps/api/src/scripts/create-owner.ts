@@ -114,7 +114,9 @@ async function createOwner(): Promise<void> {
     const existingOwner = await prisma.companyMembership.findFirst({
       where: {
         companyId: company.id,
-        role: 'OWNER',
+        roles: {
+          has: 'OWNER',
+        },
       },
       select: {
         id: true,
@@ -136,7 +138,7 @@ async function createOwner(): Promise<void> {
         membership: {
           create: {
             companyId: company.id,
-            role: 'OWNER',
+            roles: ['OWNER'],
             status: 'ACTIVE',
           },
         },

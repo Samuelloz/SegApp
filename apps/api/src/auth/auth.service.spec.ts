@@ -173,7 +173,7 @@ describe('AuthService', () => {
       updatedAt: userUpdatedAt,
       membership: {
         id: 'membership-1',
-        role: 'ADMIN',
+        roles: ['ADMIN', 'CONTRACT_MANAGER'],
         status: 'ACTIVE',
         createdAt: membershipCreatedAt,
         updatedAt: membershipUpdatedAt,
@@ -214,7 +214,7 @@ describe('AuthService', () => {
         },
         membership: {
           id: 'membership-1',
-          role: 'ADMIN',
+          roles: ['ADMIN', 'CONTRACT_MANAGER'],
           status: 'ACTIVE',
           company: {
             id: 'company-1',

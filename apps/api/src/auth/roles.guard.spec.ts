@@ -32,12 +32,12 @@ class ProtectedController {
 describe('RolesGuard', () => {
   const guard = new RolesGuard(new Reflector());
 
-  const createRequest = (role?: MembershipRole): AuthenticatedRequest =>
-    (role
+  const createRequest = (roles?: MembershipRole[]): AuthenticatedRequest =>
+    (roles
       ? {
           currentSession: {
             membership: {
-              role,
+              roles,
             },
           },
         }
@@ -81,7 +81,7 @@ describe('RolesGuard', () => {
 
   it('permite continuar cuando el rol está configurado en el controlador', () => {
     const context = createContext(
-      createRequest('ADMIN'),
+      createRequest(['ADMIN']),
       ProtectedController,
       ProtectedController.prototype.route,
     );
@@ -93,7 +93,7 @@ describe('RolesGuard', () => {
     'permite continuar cuando %s es uno de los roles configurados en el método',
     (role) => {
       const context = createContext(
-        createRequest(role),
+        createRequest([role]),
         ProtectedController,
         ProtectedController.prototype.ownerOrAdminRoute,
       );
@@ -102,9 +102,19 @@ describe('RolesGuard', () => {
     },
   );
 
+  it('permite continuar cuando uno de los múltiples roles está permitido', () => {
+    const context = createContext(
+      createRequest(['VIEWER', 'ADMIN']),
+      ProtectedController,
+      ProtectedController.prototype.ownerOrAdminRoute,
+    );
+
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
   it('rechaza una sesión cuyo rol no está permitido', () => {
     const context = createContext(
-      createRequest('VIEWER'),
+      createRequest(['VIEWER', 'SALES']),
       ProtectedController,
       ProtectedController.prototype.ownerOrAdminRoute,
     );
@@ -117,7 +127,7 @@ describe('RolesGuard', () => {
 
   it('da prioridad a los roles del método sobre los del controlador', () => {
     const context = createContext(
-      createRequest('ADMIN'),
+      createRequest(['ADMIN']),
       ProtectedController,
       ProtectedController.prototype.ownerRoute,
     );

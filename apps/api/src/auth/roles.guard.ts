@@ -37,7 +37,11 @@ export class RolesGuard implements CanActivate {
       throw new UnauthorizedException(INVALID_SESSION_MESSAGE);
     }
 
-    if (!requiredRoles.includes(currentSession.membership.role)) {
+    const hasRequiredRole = currentSession.membership.roles.some((role) =>
+      requiredRoles.includes(role),
+    );
+
+    if (!hasRequiredRole) {
       throw new ForbiddenException(INSUFFICIENT_PERMISSIONS_MESSAGE);
     }
 

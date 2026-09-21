@@ -15,6 +15,9 @@ datasource db {
 enum MembershipRole {
   OWNER
   ADMIN
+  SALES
+  CONTRACT_MANAGER
+  GUARD_MANAGER
   SUPERVISOR
   VIEWER
 }
@@ -41,7 +44,7 @@ model User {
 
 model CompanyMembership {
   id        String           @id @default(cuid())
-  role      MembershipRole
+  roles     MembershipRole[] @default([VIEWER])
   status    MembershipStatus @default(ACTIVE)
   companyId String
   userId    String           @unique
@@ -74,10 +77,10 @@ model Session {
 }
 
 model Invitation {
-  id          String         @id @default(cuid())
+  id          String           @id @default(cuid())
   email       String
-  role        MembershipRole
-  tokenHash   String         @unique
+  roles       MembershipRole[]
+  tokenHash   String           @unique
   companyId   String
   invitedById String
   expiresAt   DateTime

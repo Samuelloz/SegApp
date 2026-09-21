@@ -82,7 +82,7 @@ export class AuthService {
       },
       membership: {
         id: membership.id,
-        role: membership.role,
+        roles: membership.roles,
         status: membership.status,
         company: {
           id: membership.company.id,

@@ -48,7 +48,7 @@ describe('AuthController', () => {
     },
     membership: {
       id: 'membership-1',
-      role: 'ADMIN',
+      roles: ['ADMIN', 'CONTRACT_MANAGER'],
       status: 'ACTIVE',
       company: {
         id: 'company-1',
@@ -188,7 +188,7 @@ describe('AuthController', () => {
     };
     const membership = {
       id: 'membership-1',
-      role: 'ADMIN',
+      roles: ['ADMIN', 'CONTRACT_MANAGER'],
       status: 'ACTIVE',
       user,
       company: {
