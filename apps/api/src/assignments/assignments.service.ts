@@ -7,22 +7,44 @@ import {
 
 import { PrismaService } from '../prisma/prisma.service';
 
+const assignmentSelect = {
+  id: true,
+  guardId: true,
+  contractId: true,
+  companyId: true,
+  startedAt: true,
+  endedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  guard: { select: { fullName: true, employeeNumber: true } },
+  contract: { select: { name: true } },
+} as const;
+
+const assignmentListSelect = {
+  id: true,
+  startedAt: true,
+  endedAt: true,
+  guard: { select: { fullName: true, employeeNumber: true } },
+  contract: { select: { name: true } },
+} as const;
+
 @Injectable()
 export class AssignmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll(companyId: string) {
     return this.prisma.guardAssignment.findMany({
-      where: {
-        companyId: companyId,
-      },
-      include: {
-        guard: true,
-        contract: true,
-      },
-      orderBy: {
-        startedAt: 'desc',
-      },
+      where: { companyId },
+      select: assignmentSelect,
+      orderBy: { startedAt: 'desc' },
+    });
+  }
+
+  findList(companyId: string) {
+    return this.prisma.guardAssignment.findMany({
+      where: { companyId },
+      select: assignmentListSelect,
+      orderBy: { startedAt: 'desc' },
     });
   }
 
@@ -89,10 +111,7 @@ export class AssignmentsService {
         companyId: companyId,
         ...(startedAt ? { startedAt } : {}),
       },
-      include: {
-        guard: true,
-        contract: true,
-      },
+      select: assignmentSelect,
     });
   }
 
@@ -137,10 +156,7 @@ export class AssignmentsService {
         endedAt,
       },
 
-      include: {
-        guard: true,
-        contract: true,
-      },
+      select: assignmentSelect,
     });
   }
 }

@@ -15,6 +15,7 @@ describe('AssignmentsController', () => {
 
   const assignmentsServiceMock = {
     findAll: jest.fn(),
+    findList: jest.fn(),
     assignGuard: jest.fn(),
     endAssignment: jest.fn(),
   };
@@ -52,7 +53,7 @@ describe('AssignmentsController', () => {
     expect(guards).toEqual([SessionAuthGuard, RolesGuard]);
   });
 
-  it('permite consultar asignaciones a cualquier usuario autenticado', () => {
+  it('reserva los datos completos de asignaciones a quienes las gestionan', () => {
     const reflector = new Reflector();
     const roles = reflector.get<MembershipRole[]>(
       ROLES_KEY,
@@ -61,7 +62,23 @@ describe('AssignmentsController', () => {
       AssignmentsController.prototype.findAll,
     );
 
-    expect(roles).toBeUndefined();
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'GUARD_MANAGER', 'SUPERVISOR']);
+  });
+
+  it('permite el listado reducido a VIEWER y a gestores de asignaciones', () => {
+    const roles = new Reflector().get<MembershipRole[]>(
+      ROLES_KEY,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      AssignmentsController.prototype.findList,
+    );
+
+    expect(roles).toEqual([
+      'OWNER',
+      'ADMIN',
+      'GUARD_MANAGER',
+      'SUPERVISOR',
+      'VIEWER',
+    ]);
   });
 
   it('permite asignar guardias a propietario, administrador, supervisor y encargado de guardias', () => {
@@ -73,7 +90,7 @@ describe('AssignmentsController', () => {
       AssignmentsController.prototype.create,
     );
 
-    expect(roles).toEqual(['OWNER', 'ADMIN', 'SUPERVISOR', 'GUARD_MANAGER']);
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'GUARD_MANAGER', 'SUPERVISOR']);
   });
 
   it('permite finalizar asignaciones a propietario, administrador, supervisor y encargado de guardias', () => {
@@ -85,7 +102,7 @@ describe('AssignmentsController', () => {
       AssignmentsController.prototype.endAssignment,
     );
 
-    expect(roles).toEqual(['OWNER', 'ADMIN', 'SUPERVISOR', 'GUARD_MANAGER']);
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'GUARD_MANAGER', 'SUPERVISOR']);
   });
 
   it('lista las asignaciones de la empresa obtenida desde la sesión', async () => {
@@ -97,6 +114,15 @@ describe('AssignmentsController', () => {
 
     expect(assignmentsServiceMock.findAll).toHaveBeenCalledWith('company-1');
     expect(result).toEqual(assignments);
+  });
+
+  it('consulta el listado reducido dentro de la empresa de la sesión', async () => {
+    assignmentsServiceMock.findList.mockResolvedValue([{ id: 'assignment-1' }]);
+
+    await expect(controller.findList('company-1')).resolves.toEqual([
+      { id: 'assignment-1' },
+    ]);
+    expect(assignmentsServiceMock.findList).toHaveBeenCalledWith('company-1');
   });
 
   it('rechaza datos inválidos al crear una asignación', () => {

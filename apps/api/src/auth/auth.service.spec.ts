@@ -90,6 +90,37 @@ describe('AuthService', () => {
     );
   });
 
+  it('acepta un teléfono en formato internacional para una cuenta sin correo', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'user-phone-1',
+      email: null,
+      phoneE164: '+528711234567',
+      passwordHash: 'hash-guardado',
+      name: 'Rosario López',
+      active: true,
+      emailVerifiedAt: null,
+      phoneVerifiedAt: new Date('2026-09-18T00:00:00.000Z'),
+      createdAt: new Date('2026-09-18T00:00:00.000Z'),
+      updatedAt: new Date('2026-09-18T00:00:00.000Z'),
+      membership: null,
+    });
+    passwordServiceMock.verify.mockResolvedValue(true);
+
+    const result = await service.authenticateCredentials(
+      ' +528711234567 ',
+      'una contraseña segura',
+    );
+
+    expect(prismaMock.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { phoneE164: '+528711234567' },
+      }),
+    );
+    expect(result.email).toBeNull();
+    expect(result.phoneE164).toBe('+528711234567');
+    expect(result).not.toHaveProperty('passwordHash');
+  });
+
   it('rechaza un correo electrónico inexistente', async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
 
@@ -98,7 +129,7 @@ describe('AuthService', () => {
         'inexistente@segapp.test',
         'una contraseña segura',
       ),
-    ).rejects.toThrow('Correo electrónico o contraseña incorrectos.');
+    ).rejects.toThrow('Datos de acceso incorrectos.');
 
     expect(passwordServiceMock.verify).not.toHaveBeenCalled();
   });
@@ -121,7 +152,7 @@ describe('AuthService', () => {
         'usuario@segapp.test',
         'una contraseña segura',
       ),
-    ).rejects.toThrow('Correo electrónico o contraseña incorrectos.');
+    ).rejects.toThrow('Datos de acceso incorrectos.');
 
     expect(passwordServiceMock.verify).not.toHaveBeenCalled();
   });
@@ -146,7 +177,7 @@ describe('AuthService', () => {
         'usuario@segapp.test',
         'contraseña incorrecta',
       ),
-    ).rejects.toThrow('Correo electrónico o contraseña incorrectos.');
+    ).rejects.toThrow('Datos de acceso incorrectos.');
 
     expect(passwordServiceMock.verify).toHaveBeenCalledWith(
       'hash-guardado',
@@ -165,10 +196,12 @@ describe('AuthService', () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: 'user-1',
       email: 'usuario@segapp.test',
+      phoneE164: null,
       passwordHash: 'hash-guardado',
       name: 'Rosario López',
       active: true,
       emailVerifiedAt,
+      phoneVerifiedAt: null,
       createdAt: userCreatedAt,
       updatedAt: userUpdatedAt,
       membership: {
@@ -195,7 +228,7 @@ describe('AuthService', () => {
     });
 
     const result = await service.login({
-      email: 'usuario@segapp.test',
+      identifier: 'usuario@segapp.test',
       password: 'una contraseña segura',
     });
 
@@ -206,9 +239,11 @@ describe('AuthService', () => {
         user: {
           id: 'user-1',
           email: 'usuario@segapp.test',
+          phoneE164: null,
           name: 'Rosario López',
           active: true,
           emailVerifiedAt: emailVerifiedAt.toISOString(),
+          phoneVerifiedAt: null,
           createdAt: userCreatedAt.toISOString(),
           updatedAt: userUpdatedAt.toISOString(),
         },
@@ -229,6 +264,66 @@ describe('AuthService', () => {
     });
   });
 
+  it('inicia sesión para una cuenta con solo teléfono', async () => {
+    const phoneVerifiedAt = new Date('2026-09-17T12:00:00.000Z');
+    const createdAt = new Date('2026-09-18T08:00:00.000Z');
+    const updatedAt = new Date('2026-09-18T09:00:00.000Z');
+    const expiresAt = new Date('2026-09-19T00:00:00.000Z');
+
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'user-phone-1',
+      email: null,
+      phoneE164: '+528711234567',
+      passwordHash: 'hash-guardado',
+      name: 'Rosario López',
+      active: true,
+      emailVerifiedAt: null,
+      phoneVerifiedAt,
+      createdAt,
+      updatedAt,
+      membership: {
+        id: 'membership-1',
+        roles: ['VIEWER'],
+        status: 'ACTIVE',
+        createdAt,
+        updatedAt,
+        company: {
+          id: 'company-1',
+          name: 'Seguridad del Norte',
+          slug: 'seguridad-del-norte',
+        },
+      },
+    });
+    passwordServiceMock.verify.mockResolvedValue(true);
+    sessionServiceMock.create.mockResolvedValue({
+      token: 'token-original',
+      session: { expiresAt },
+    });
+
+    const result = await service.login({
+      identifier: '+528711234567',
+      password: 'una contraseña segura',
+    });
+
+    expect(prismaMock.user.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { phoneE164: '+528711234567' },
+      }),
+    );
+    expect(sessionServiceMock.create).toHaveBeenCalledWith('membership-1');
+    expect(result.currentSession.user).toEqual({
+      id: 'user-phone-1',
+      email: null,
+      phoneE164: '+528711234567',
+      name: 'Rosario López',
+      active: true,
+      emailVerifiedAt: null,
+      phoneVerifiedAt: phoneVerifiedAt.toISOString(),
+      createdAt: createdAt.toISOString(),
+      updatedAt: updatedAt.toISOString(),
+    });
+  });
+
   it('rechaza el inicio de sesión de un usuario sin membresía', async () => {
     prismaMock.user.findUnique.mockResolvedValue({
       id: 'user-1',
@@ -246,7 +341,7 @@ describe('AuthService', () => {
 
     await expect(
       service.login({
-        email: 'usuario@segapp.test',
+        identifier: 'usuario@segapp.test',
         password: 'una contraseña segura',
       }),
     ).rejects.toThrow('La cuenta no tiene acceso a una empresa activa.');

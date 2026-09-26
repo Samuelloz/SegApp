@@ -1,5 +1,6 @@
 import {
   createGuardSchema,
+  rolesFor,
   updateGuardSchema,
   updateActiveStatusSchema,
 } from '@segapp/contracts';
@@ -27,12 +28,25 @@ export class GuardsController {
   constructor(private service: GuardService) {}
 
   @Get()
+  @Roles(...rolesFor('guards:manage'))
   findAll(@CurrentCompanyId() companyId: string) {
     return this.service.findAll(companyId);
   }
 
+  @Get('list')
+  @Roles(...rolesFor('guards:list'))
+  findList(@CurrentCompanyId() companyId: string) {
+    return this.service.findList(companyId);
+  }
+
+  @Get('assignment-options')
+  @Roles(...rolesFor('assignments:manage'))
+  findAssignmentOptions(@CurrentCompanyId() companyId: string) {
+    return this.service.findAssignmentOptions(companyId);
+  }
+
   @Post()
-  @Roles('OWNER', 'ADMIN', 'GUARD_MANAGER')
+  @Roles(...rolesFor('guards:manage'))
   create(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = createGuardSchema.safeParse(body);
 
@@ -48,7 +62,7 @@ export class GuardsController {
   }
 
   @Patch(':id')
-  @Roles('OWNER', 'ADMIN', 'GUARD_MANAGER')
+  @Roles(...rolesFor('guards:manage'))
   update(
     @CurrentCompanyId() companyId: string,
     @Param('id') id: string,
@@ -68,7 +82,7 @@ export class GuardsController {
   }
 
   @Patch(':id/status')
-  @Roles('OWNER', 'ADMIN', 'GUARD_MANAGER')
+  @Roles(...rolesFor('guards:manage'))
   updateStatus(
     @CurrentCompanyId() companyId: string,
     @Param('id') id: string,

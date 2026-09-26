@@ -29,6 +29,33 @@ export class CompaniesService {
     return company;
   }
 
+  async findUsers(companyId: string) {
+    const memberships = await this.prisma.companyMembership.findMany({
+      where: { companyId },
+      select: {
+        id: true,
+        roles: true,
+        status: true,
+        createdAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phoneE164: true,
+            active: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return memberships.map((membership) => ({
+      ...membership,
+      createdAt: membership.createdAt.toISOString(),
+    }));
+  }
+
   async updateCurrent(companyId: string, data: UpdateCompanyData) {
     await this.findCurrent(companyId);
 

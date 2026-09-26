@@ -40,9 +40,11 @@ describe('AuthController', () => {
     user: {
       id: 'user-1',
       email: 'usuario@segapp.test',
+      phoneE164: null,
       name: 'Rosario López',
       active: true,
       emailVerifiedAt: null,
+      phoneVerifiedAt: null,
       createdAt: '2026-09-18T08:00:00.000Z',
       updatedAt: '2026-09-18T09:00:00.000Z',
     },
@@ -84,7 +86,7 @@ describe('AuthController', () => {
     await expect(
       controller.login(
         {
-          email: 'correo-inválido',
+          identifier: 'correo-inválido',
           password: '',
         },
         responseMock as unknown as Response,
@@ -104,14 +106,14 @@ describe('AuthController', () => {
 
     const result = await controller.login(
       {
-        email: ' USUARIO@SEGAPP.TEST ',
+        identifier: ' USUARIO@SEGAPP.TEST ',
         password: 'una contraseña segura',
       },
       responseMock as unknown as Response,
     );
 
     expect(authServiceMock.login).toHaveBeenCalledWith({
-      email: 'usuario@segapp.test',
+      identifier: 'usuario@segapp.test',
       password: 'una contraseña segura',
     });
     expect(responseMock.cookie).toHaveBeenCalledWith(
@@ -133,15 +135,35 @@ describe('AuthController', () => {
     expect(result).not.toHaveProperty('token');
   });
 
+  it('acepta un teléfono y lo entrega normalizado al servicio', async () => {
+    authServiceMock.login.mockResolvedValue({
+      token: 'token-original',
+      currentSession,
+    });
+
+    await controller.login(
+      {
+        identifier: ' +528711234567 ',
+        password: 'una contraseña segura',
+      },
+      responseMock as unknown as Response,
+    );
+
+    expect(authServiceMock.login).toHaveBeenCalledWith({
+      identifier: '+528711234567',
+      password: 'una contraseña segura',
+    });
+  });
+
   it('no crea una cookie cuando las credenciales son rechazadas', async () => {
     authServiceMock.login.mockRejectedValue(
-      new UnauthorizedException('Correo electrónico o contraseña incorrectos.'),
+      new UnauthorizedException('Datos de acceso incorrectos.'),
     );
 
     await expect(
       controller.login(
         {
-          email: 'usuario@segapp.test',
+          identifier: 'usuario@segapp.test',
           password: 'contraseña incorrecta',
         },
         responseMock as unknown as Response,

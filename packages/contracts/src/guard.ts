@@ -262,7 +262,24 @@ export const guardResponseSchema = z.object({
   deletedAt: z.iso.datetime().nullable(),
 });
 
+export const guardListItemSchema = guardResponseSchema.pick({
+  id: true,
+  fullName: true,
+  employeeNumber: true,
+  active: true,
+  hiredAt: true,
+});
+
+export const guardAssignmentOptionSchema = guardResponseSchema.pick({
+  id: true,
+  fullName: true,
+  employeeNumber: true,
+  active: true,
+});
+
 export type GuardFormValues = z.infer<typeof guardFormSchema>;
 export type CreateGuardInput = z.infer<typeof createGuardSchema>;
 export type UpdateGuardInput = z.infer<typeof updateGuardSchema>;
 export type Guard = z.infer<typeof guardResponseSchema>;
+export type GuardListItem = z.infer<typeof guardListItemSchema>;
+export type GuardAssignmentOption = z.infer<typeof guardAssignmentOptionSchema>;

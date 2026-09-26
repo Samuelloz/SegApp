@@ -1,5 +1,6 @@
 import {
   createContractSchema,
+  rolesFor,
   updateActiveStatusSchema,
   updateContractSchema,
 } from '@segapp/contracts';
@@ -27,12 +28,25 @@ export class ContractsController {
   constructor(private service: ContractsService) {}
 
   @Get()
+  @Roles(...rolesFor('contracts:manage'))
   findAll(@CurrentCompanyId() companyId: string) {
     return this.service.findAll(companyId);
   }
 
+  @Get('list')
+  @Roles(...rolesFor('contracts:list'))
+  findList(@CurrentCompanyId() companyId: string) {
+    return this.service.findList(companyId);
+  }
+
+  @Get('assignment-options')
+  @Roles(...rolesFor('assignments:manage'))
+  findAssignmentOptions(@CurrentCompanyId() companyId: string) {
+    return this.service.findAssignmentOptions(companyId);
+  }
+
   @Post()
-  @Roles('OWNER', 'ADMIN', 'SALES', 'CONTRACT_MANAGER')
+  @Roles(...rolesFor('contracts:manage'))
   create(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = createContractSchema.safeParse(body);
 
@@ -48,7 +62,7 @@ export class ContractsController {
   }
 
   @Patch(':id')
-  @Roles('OWNER', 'ADMIN', 'SALES', 'CONTRACT_MANAGER')
+  @Roles(...rolesFor('contracts:manage'))
   update(
     @CurrentCompanyId() companyId: string,
     @Param('id') id: string,
@@ -68,7 +82,7 @@ export class ContractsController {
   }
 
   @Patch(':id/status')
-  @Roles('OWNER', 'ADMIN', 'CONTRACT_MANAGER')
+  @Roles(...rolesFor('contracts:status'))
   updateStatus(
     @CurrentCompanyId() companyId: string,
     @Param('id') id: string,

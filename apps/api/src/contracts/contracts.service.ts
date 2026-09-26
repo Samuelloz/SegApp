@@ -21,6 +21,30 @@ export class ContractsService {
     });
   }
 
+  findList(companyId: string) {
+    return this.prisma.contract.findMany({
+      where: { companyId, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        clientLegalName: true,
+        startDate: true,
+        endDate: true,
+        requiredGuardCount: true,
+        active: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findAssignmentOptions(companyId: string) {
+    return this.prisma.contract.findMany({
+      where: { companyId, deletedAt: null, active: true },
+      select: { id: true, name: true, active: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   create(companyId: string, data: CreateContractInput) {
     return this.prisma.contract.create({
       data: {

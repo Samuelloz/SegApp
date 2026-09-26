@@ -1,4 +1,4 @@
-import { updateCompanySchema } from '@segapp/contracts';
+import { rolesFor, updateCompanySchema } from '@segapp/contracts';
 
 import {
   BadRequestException,
@@ -9,10 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
+import { CurrentCompanyId } from '../auth/current-company-id.decorator';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-
-import { CurrentCompanyId } from '../auth/current-company-id.decorator';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { CompaniesService, type UpdateCompanyData } from './companies.service';
 
@@ -22,12 +21,19 @@ export class CompaniesController {
   constructor(private readonly service: CompaniesService) {}
 
   @Get('current')
+  @Roles(...rolesFor('company:manage'))
   findCurrent(@CurrentCompanyId() companyId: string) {
     return this.service.findCurrent(companyId);
   }
 
+  @Get('current/users')
+  @Roles(...rolesFor('users:manage'))
+  findUsers(@CurrentCompanyId() companyId: string) {
+    return this.service.findUsers(companyId);
+  }
+
   @Patch('current')
-  @Roles('OWNER', 'ADMIN')
+  @Roles(...rolesFor('company:manage'))
   updateCurrent(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = updateCompanySchema.safeParse(body);
 

@@ -67,6 +67,36 @@ describe('GuardService', () => {
     expect(result).toEqual(guards);
   });
 
+  it('selecciona solo los campos públicos del listado de guardias', async () => {
+    prismaMock.guard.findMany.mockResolvedValue([]);
+
+    await service.findList('company-1');
+
+    expect(prismaMock.guard.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company-1', deletedAt: null },
+      select: {
+        id: true,
+        fullName: true,
+        employeeNumber: true,
+        active: true,
+        hiredAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  });
+
+  it('limita las opciones de asignación a guardias activos y campos mínimos', async () => {
+    prismaMock.guard.findMany.mockResolvedValue([]);
+
+    await service.findAssignmentOptions('company-1');
+
+    expect(prismaMock.guard.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company-1', deletedAt: null, active: true },
+      select: { id: true, fullName: true, employeeNumber: true, active: true },
+      orderBy: { fullName: 'asc' },
+    });
+  });
+
   it('crea el guardia dentro de la empresa indicada y normaliza sus datos', async () => {
     const createdGuard = { id: 'guard-1', companyId: 'company-1' };
 

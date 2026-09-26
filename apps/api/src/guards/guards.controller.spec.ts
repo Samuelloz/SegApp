@@ -15,6 +15,8 @@ describe('GuardsController', () => {
 
   const guardServiceMock = {
     findAll: jest.fn(),
+    findList: jest.fn(),
+    findAssignmentOptions: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     updateActiveStatus: jest.fn(),
@@ -63,7 +65,7 @@ describe('GuardsController', () => {
     expect(guards).toEqual([SessionAuthGuard, RolesGuard]);
   });
 
-  it('permite consultar guardias a cualquier usuario autenticado', () => {
+  it('reserva los datos completos de guardias a quienes los gestionan', () => {
     const reflector = new Reflector();
     const roles = reflector.get<MembershipRole[]>(
       ROLES_KEY,
@@ -72,7 +74,27 @@ describe('GuardsController', () => {
       GuardsController.prototype.findAll,
     );
 
-    expect(roles).toBeUndefined();
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'GUARD_MANAGER']);
+  });
+
+  it('permite el listado reducido a VIEWER y a gestores de guardias', () => {
+    const roles = new Reflector().get<MembershipRole[]>(
+      ROLES_KEY,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      GuardsController.prototype.findList,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'GUARD_MANAGER', 'VIEWER']);
+  });
+
+  it('limita las opciones de asignación a quienes gestionan asignaciones', () => {
+    const roles = new Reflector().get<MembershipRole[]>(
+      ROLES_KEY,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      GuardsController.prototype.findAssignmentOptions,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'GUARD_MANAGER', 'SUPERVISOR']);
   });
 
   it('reserva la creación de guardias a propietario, administrador y encargado de guardias', () => {
@@ -120,6 +142,24 @@ describe('GuardsController', () => {
 
     expect(guardServiceMock.findAll).toHaveBeenCalledWith('company-1');
     expect(result).toEqual(guards);
+  });
+
+  it('consulta el listado reducido y las opciones dentro de la empresa de la sesión', async () => {
+    guardServiceMock.findList.mockResolvedValue([{ id: 'guard-1' }]);
+    guardServiceMock.findAssignmentOptions.mockResolvedValue([
+      { id: 'guard-2' },
+    ]);
+
+    await expect(controller.findList('company-1')).resolves.toEqual([
+      { id: 'guard-1' },
+    ]);
+    await expect(
+      controller.findAssignmentOptions('company-1'),
+    ).resolves.toEqual([{ id: 'guard-2' }]);
+    expect(guardServiceMock.findList).toHaveBeenCalledWith('company-1');
+    expect(guardServiceMock.findAssignmentOptions).toHaveBeenCalledWith(
+      'company-1',
+    );
   });
 
   it('rechaza datos inválidos al crear un guardia', () => {

@@ -15,6 +15,7 @@ describe('CompaniesController', () => {
 
   const companiesServiceMock = {
     findCurrent: jest.fn(),
+    findUsers: jest.fn(),
     updateCurrent: jest.fn(),
   };
 
@@ -51,7 +52,7 @@ describe('CompaniesController', () => {
     expect(guards).toEqual([SessionAuthGuard, RolesGuard]);
   });
 
-  it('permite consultar la empresa sin restringir roles', () => {
+  it('reserva la consulta de empresa a OWNER y ADMIN', () => {
     const reflector = new Reflector();
     const roles = reflector.get<MembershipRole[]>(
       ROLES_KEY,
@@ -60,7 +61,7 @@ describe('CompaniesController', () => {
       CompaniesController.prototype.findCurrent,
     );
 
-    expect(roles).toBeUndefined();
+    expect(roles).toEqual(['OWNER', 'ADMIN']);
   });
 
   it('limita la actualización de la empresa a OWNER y ADMIN', () => {
@@ -70,6 +71,18 @@ describe('CompaniesController', () => {
       // Solo se usa la referencia del método para leer sus metadatos.
       // eslint-disable-next-line @typescript-eslint/unbound-method
       CompaniesController.prototype.updateCurrent,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN']);
+  });
+
+  it('limita la consulta de usuarios a OWNER y ADMIN', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get<MembershipRole[]>(
+      ROLES_KEY,
+      // Solo se usa la referencia del método para leer sus metadatos.
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      CompaniesController.prototype.findUsers,
     );
 
     expect(roles).toEqual(['OWNER', 'ADMIN']);
@@ -87,6 +100,16 @@ describe('CompaniesController', () => {
 
     expect(companiesServiceMock.findCurrent).toHaveBeenCalledWith('company-1');
     expect(result).toEqual(company);
+  });
+
+  it('consulta los usuarios de la empresa obtenida desde la sesión', async () => {
+    const users = [{ id: 'membership-1', user: { name: 'Samuel Lozano' } }];
+    companiesServiceMock.findUsers.mockResolvedValue(users);
+
+    const result = await controller.findUsers('company-1');
+
+    expect(companiesServiceMock.findUsers).toHaveBeenCalledWith('company-1');
+    expect(result).toEqual(users);
   });
 
   it('rechaza datos de actualización inválidos', () => {

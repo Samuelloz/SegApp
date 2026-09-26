@@ -65,6 +65,38 @@ describe('ContractsService', () => {
     expect(result).toEqual(contracts);
   });
 
+  it('selecciona solo los campos públicos del listado de contratos', async () => {
+    prismaMock.contract.findMany.mockResolvedValue([]);
+
+    await service.findList('company-1');
+
+    expect(prismaMock.contract.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company-1', deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        clientLegalName: true,
+        startDate: true,
+        endDate: true,
+        requiredGuardCount: true,
+        active: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  });
+
+  it('limita las opciones de asignación a contratos activos y campos mínimos', async () => {
+    prismaMock.contract.findMany.mockResolvedValue([]);
+
+    await service.findAssignmentOptions('company-1');
+
+    expect(prismaMock.contract.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company-1', deletedAt: null, active: true },
+      select: { id: true, name: true, active: true },
+      orderBy: { name: 'asc' },
+    });
+  });
+
   it('crea el contrato dentro de la empresa indicada y normaliza sus datos', async () => {
     const createdContract = {
       id: 'contract-1',

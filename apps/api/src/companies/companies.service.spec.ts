@@ -12,6 +12,9 @@ describe('CompaniesService', () => {
       findFirst: jest.fn(),
       update: jest.fn(),
     },
+    companyMembership: {
+      findMany: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -56,6 +59,55 @@ describe('CompaniesService', () => {
     await expect(service.findCurrent('company-1')).rejects.toThrow(
       NotFoundException,
     );
+  });
+
+  it('devuelve únicamente los miembros de la empresa indicada sin datos sensibles', async () => {
+    const createdAt = new Date('2026-09-21T12:00:00.000Z');
+    const membership = {
+      id: 'membership-1',
+      roles: ['OWNER'],
+      status: 'ACTIVE',
+      createdAt,
+      user: {
+        id: 'user-1',
+        name: 'Samuel Lozano',
+        email: 'samuel@ejemplo.com',
+        phoneE164: null,
+        active: true,
+      },
+    };
+    prismaMock.companyMembership.findMany.mockResolvedValue([membership]);
+
+    const result = await service.findUsers('company-1');
+
+    expect(prismaMock.companyMembership.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company-1' },
+      select: {
+        id: true,
+        roles: true,
+        status: true,
+        createdAt: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phoneE164: true,
+            active: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    expect(result).toEqual([
+      { ...membership, createdAt: '2026-09-21T12:00:00.000Z' },
+    ]);
+  });
+
+  it('devuelve una lista vacía cuando la empresa no tiene miembros', async () => {
+    prismaMock.companyMembership.findMany.mockResolvedValue([]);
+
+    await expect(service.findUsers('company-1')).resolves.toEqual([]);
   });
 
   it('actualiza únicamente la empresa indicada', async () => {

@@ -15,6 +15,8 @@ describe('ContractsController', () => {
 
   const contractsServiceMock = {
     findAll: jest.fn(),
+    findList: jest.fn(),
+    findAssignmentOptions: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
     updateActiveStatus: jest.fn(),
@@ -63,7 +65,7 @@ describe('ContractsController', () => {
     expect(guards).toEqual([SessionAuthGuard, RolesGuard]);
   });
 
-  it('permite consultar contratos a cualquier usuario autenticado', () => {
+  it('reserva los datos completos de contratos a quienes los gestionan', () => {
     const reflector = new Reflector();
     const roles = reflector.get<MembershipRole[]>(
       ROLES_KEY,
@@ -72,7 +74,33 @@ describe('ContractsController', () => {
       ContractsController.prototype.findAll,
     );
 
-    expect(roles).toBeUndefined();
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'SALES', 'CONTRACT_MANAGER']);
+  });
+
+  it('permite el listado reducido a VIEWER y a gestores de contratos', () => {
+    const roles = new Reflector().get<MembershipRole[]>(
+      ROLES_KEY,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      ContractsController.prototype.findList,
+    );
+
+    expect(roles).toEqual([
+      'OWNER',
+      'ADMIN',
+      'SALES',
+      'CONTRACT_MANAGER',
+      'VIEWER',
+    ]);
+  });
+
+  it('limita las opciones de asignación a quienes gestionan asignaciones', () => {
+    const roles = new Reflector().get<MembershipRole[]>(
+      ROLES_KEY,
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      ContractsController.prototype.findAssignmentOptions,
+    );
+
+    expect(roles).toEqual(['OWNER', 'ADMIN', 'GUARD_MANAGER', 'SUPERVISOR']);
   });
 
   it('permite crear contratos a propietario, administrador, ventas y encargado de contratos', () => {
@@ -120,6 +148,24 @@ describe('ContractsController', () => {
 
     expect(contractsServiceMock.findAll).toHaveBeenCalledWith('company-1');
     expect(result).toEqual(contracts);
+  });
+
+  it('consulta el listado reducido y las opciones dentro de la empresa de la sesión', async () => {
+    contractsServiceMock.findList.mockResolvedValue([{ id: 'contract-1' }]);
+    contractsServiceMock.findAssignmentOptions.mockResolvedValue([
+      { id: 'contract-2' },
+    ]);
+
+    await expect(controller.findList('company-1')).resolves.toEqual([
+      { id: 'contract-1' },
+    ]);
+    await expect(
+      controller.findAssignmentOptions('company-1'),
+    ).resolves.toEqual([{ id: 'contract-2' }]);
+    expect(contractsServiceMock.findList).toHaveBeenCalledWith('company-1');
+    expect(contractsServiceMock.findAssignmentOptions).toHaveBeenCalledWith(
+      'company-1',
+    );
   });
 
   it('rechaza datos inválidos al crear un contrato', () => {

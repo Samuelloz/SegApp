@@ -23,20 +23,29 @@ enum MembershipRole {
 }
 
 enum MembershipStatus {
+  PENDING
   ACTIVE
   SUSPENDED
 }
 
+enum InvitationDeliveryChannel {
+  EMAIL
+  WHATSAPP
+}
+
 model User {
   id              String    @id @default(cuid())
-  email           String    @unique
+  email           String?   @unique
+  phoneE164       String?   @unique
   passwordHash    String
   name            String
   active          Boolean   @default(true)
   emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
 
-  membership      CompanyMembership?
-  invitationsSent Invitation[]       @relation("InvitationSender")
+  membership         CompanyMembership?
+  invitationsSent    Invitation[]          @relation("InvitationSender")
+  verificationTokens ContactVerification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -77,15 +86,17 @@ model Session {
 }
 
 model Invitation {
-  id          String           @id @default(cuid())
-  email       String
-  roles       MembershipRole[]
-  tokenHash   String           @unique
-  companyId   String
-  invitedById String
-  expiresAt   DateTime
-  acceptedAt  DateTime?
-  revokedAt   DateTime?
+  id              String                    @id @default(cuid())
+  email           String?
+  phoneE164       String?
+  deliveryChannel InvitationDeliveryChannel
+  roles           MembershipRole[]
+  tokenHash       String                    @unique
+  companyId       String
+  invitedById     String
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
 
   company   Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
   invitedBy User    @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Restrict)
@@ -93,7 +104,26 @@ model Invitation {
   createdAt DateTime @default(now())
 
   @@index([companyId, email])
+  @@index([companyId, phoneE164])
   @@index([invitedById])
+  @@index([expiresAt])
+}
+
+model ContactVerification {
+  id              String                    @id @default(cuid())
+  tokenHash       String                    @unique
+  deliveryChannel InvitationDeliveryChannel
+  contactValue    String
+  userId          String
+  expiresAt       DateTime
+  consumedAt      DateTime?
+  revokedAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, deliveryChannel])
   @@index([expiresAt])
 }
 

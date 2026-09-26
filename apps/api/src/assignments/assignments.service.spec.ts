@@ -28,6 +28,18 @@ describe('AssignmentsService', () => {
 
   const startedAt = new Date('2026-09-18T10:00:00.000Z');
   const endedAt = new Date('2026-09-18T18:00:00.000Z');
+  const fullSelect = {
+    id: true,
+    guardId: true,
+    contractId: true,
+    companyId: true,
+    startedAt: true,
+    endedAt: true,
+    createdAt: true,
+    updatedAt: true,
+    guard: { select: { fullName: true, employeeNumber: true } },
+    contract: { select: { name: true } },
+  };
 
   beforeEach(async () => {
     jest.resetAllMocks();
@@ -68,15 +80,33 @@ describe('AssignmentsService', () => {
       where: {
         companyId: 'company-1',
       },
-      include: {
-        guard: true,
-        contract: true,
-      },
+      select: fullSelect,
       orderBy: {
         startedAt: 'desc',
       },
     });
     expect(result).toEqual(assignments);
+  });
+
+  it('consulta para VIEWER solo los campos de listado de su empresa', async () => {
+    prismaMock.guardAssignment.findMany.mockResolvedValue([
+      { id: 'assignment-1' },
+    ]);
+
+    await expect(service.findList('company-1')).resolves.toEqual([
+      { id: 'assignment-1' },
+    ]);
+    expect(prismaMock.guardAssignment.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company-1' },
+      orderBy: { startedAt: 'desc' },
+      select: {
+        id: true,
+        startedAt: true,
+        endedAt: true,
+        guard: { select: { fullName: true, employeeNumber: true } },
+        contract: { select: { name: true } },
+      },
+    });
   });
 
   it('asigna un guardia y un contrato pertenecientes a la empresa indicada', async () => {
@@ -123,10 +153,7 @@ describe('AssignmentsService', () => {
         companyId: 'company-1',
         startedAt,
       },
-      include: {
-        guard: true,
-        contract: true,
-      },
+      select: fullSelect,
     });
     expect(result).toEqual(createdAssignment);
   });
@@ -240,10 +267,7 @@ describe('AssignmentsService', () => {
       data: {
         endedAt,
       },
-      include: {
-        guard: true,
-        contract: true,
-      },
+      select: fullSelect,
     });
     expect(result).toEqual({ id: 'assignment-1', endedAt });
   });

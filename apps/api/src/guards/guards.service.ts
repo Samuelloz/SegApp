@@ -23,6 +23,33 @@ export class GuardService {
     });
   }
 
+  findList(companyId: string) {
+    return this.prisma.guard.findMany({
+      where: { companyId, deletedAt: null },
+      select: {
+        id: true,
+        fullName: true,
+        employeeNumber: true,
+        active: true,
+        hiredAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findAssignmentOptions(companyId: string) {
+    return this.prisma.guard.findMany({
+      where: { companyId, deletedAt: null, active: true },
+      select: {
+        id: true,
+        fullName: true,
+        employeeNumber: true,
+        active: true,
+      },
+      orderBy: { fullName: 'asc' },
+    });
+  }
+
   async create(companyId: string, data: CreateGuardInput) {
     await this.ensureUniqueIdentifiers(companyId, data);
 

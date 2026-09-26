@@ -276,7 +276,27 @@ export const contractResponseSchema = z.object({
   deletedAt: z.iso.datetime().nullable(),
 });
 
+export const contractListItemSchema = contractResponseSchema.pick({
+  id: true,
+  name: true,
+  clientLegalName: true,
+  startDate: true,
+  endDate: true,
+  requiredGuardCount: true,
+  active: true,
+});
+
+export const contractAssignmentOptionSchema = contractResponseSchema.pick({
+  id: true,
+  name: true,
+  active: true,
+});
+
 export type ContractFormValues = z.infer<typeof contractFormSchema>;
 export type CreateContractInput = z.infer<typeof createContractSchema>;
 export type UpdateContractInput = z.infer<typeof updateContractSchema>;
 export type Contract = z.infer<typeof contractResponseSchema>;
+export type ContractListItem = z.infer<typeof contractListItemSchema>;
+export type ContractAssignmentOption = z.infer<
+  typeof contractAssignmentOptionSchema
+>;

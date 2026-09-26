@@ -11,8 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
 import { SessionService } from './session.service';
 
-const INVALID_CREDENTIALS_MESSAGE =
-  'Correo electrónico o contraseña incorrectos.';
+const INVALID_CREDENTIALS_MESSAGE = 'Datos de acceso incorrectos.';
 
 type MembershipWithCompany = CompanyMembership & {
   company: Pick<Company, 'id' | 'name' | 'slug'>;
@@ -26,11 +25,14 @@ export class AuthService {
     private readonly sessionService: SessionService,
   ) {}
 
-  async authenticateCredentials(email: string, password: string) {
-    const normalizedEmail = email.trim().toLowerCase();
+  async authenticateCredentials(identifier: string, password: string) {
+    const normalizedIdentifier = identifier.trim();
+    const where = normalizedIdentifier.startsWith('+')
+      ? { phoneE164: normalizedIdentifier }
+      : { email: normalizedIdentifier.toLowerCase() };
 
     const user = await this.prisma.user.findUnique({
-      where: { email: normalizedEmail },
+      where,
       include: {
         membership: {
           include: {
@@ -56,9 +58,11 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
+      phoneE164: user.phoneE164,
       name: user.name,
       active: user.active,
       emailVerifiedAt: user.emailVerifiedAt,
+      phoneVerifiedAt: user.phoneVerifiedAt,
       membership: user.membership,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -74,9 +78,11 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        phoneE164: user.phoneE164,
         name: user.name,
         active: user.active,
         emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+        phoneVerifiedAt: user.phoneVerifiedAt?.toISOString() ?? null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       },
@@ -98,7 +104,7 @@ export class AuthService {
 
   async login(input: LoginInput) {
     const authenticatedUser = await this.authenticateCredentials(
-      input.email,
+      input.identifier,
       input.password,
     );
 

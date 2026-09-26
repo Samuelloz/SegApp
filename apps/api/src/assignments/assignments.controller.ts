@@ -1,4 +1,8 @@
-import { createAssignmentSchema, endAssignmentSchema } from '@segapp/contracts';
+import {
+  createAssignmentSchema,
+  endAssignmentSchema,
+  rolesFor,
+} from '@segapp/contracts';
 
 import {
   BadRequestException,
@@ -23,12 +27,19 @@ export class AssignmentsController {
   constructor(private service: AssignmentsService) {}
 
   @Get()
+  @Roles(...rolesFor('assignments:manage'))
   findAll(@CurrentCompanyId() companyId: string) {
     return this.service.findAll(companyId);
   }
 
+  @Get('list')
+  @Roles(...rolesFor('assignments:list'))
+  findList(@CurrentCompanyId() companyId: string) {
+    return this.service.findList(companyId);
+  }
+
   @Post()
-  @Roles('OWNER', 'ADMIN', 'SUPERVISOR', 'GUARD_MANAGER')
+  @Roles(...rolesFor('assignments:manage'))
   create(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = createAssignmentSchema.safeParse(body);
 
@@ -48,7 +59,7 @@ export class AssignmentsController {
   }
 
   @Patch(':id/end')
-  @Roles('OWNER', 'ADMIN', 'SUPERVISOR', 'GUARD_MANAGER')
+  @Roles(...rolesFor('assignments:manage'))
   endAssignment(
     @CurrentCompanyId() companyId: string,
     @Param('id') id: string,
