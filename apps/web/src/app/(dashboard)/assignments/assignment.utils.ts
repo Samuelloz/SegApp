@@ -7,7 +7,7 @@ export function formatAssignmentDate(value: string): string {
 }
 
 export function getAssignmentStatus(
-  assignment: GuardAssignment,
+  assignment: Pick<GuardAssignment, 'startedAt' | 'endedAt'>,
   currentTimestamp: number,
 ): AssignmentStatus {
   if (assignment.endedAt) {

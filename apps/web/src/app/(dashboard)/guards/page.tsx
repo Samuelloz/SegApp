@@ -3,11 +3,17 @@
 import { type ChangeEvent, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { Guard, GuardFormValues } from '@segapp/contracts';
+import {
+  hasPermission,
+  type Guard,
+  type GuardFormValues,
+} from '@segapp/contracts';
 
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import {
   useGetGuardsQuery,
+  useGetGuardListQuery,
+  useGetCurrentSessionQuery,
   useCreateGuardMutation,
   useUpdateGuardMutation,
   useUpdateGuardStatusMutation,
@@ -15,6 +21,7 @@ import {
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 
 import GuardCard from './components/GuardCard';
@@ -22,6 +29,7 @@ import GuardDetailsModal from './components/GuardDetailsModal';
 import GuardFormModal from './components/GuardFormModal';
 
 import {
+  formatGuardDate,
   getEmptyGuardFormValues,
   guardToFormValues,
   matchesGuardSearch,
@@ -32,6 +40,58 @@ import styles from './guards.module.css';
 const EMPTY_GUARD_FORM_VALUES = getEmptyGuardFormValues();
 
 export default function GuardsPage() {
+  const { data: session } = useGetCurrentSessionQuery();
+
+  if (!session) return <p className="pMuted">Verificando sesión...</p>;
+
+  const roles = session.membership.roles;
+  if (!hasPermission(roles, 'guards:list')) {
+    return <p className="pMuted">No tienes acceso a guardias.</p>;
+  }
+
+  return hasPermission(roles, 'guards:manage') ? (
+    <GuardsManagementPage />
+  ) : (
+    <GuardsReadOnlyPage />
+  );
+}
+
+function GuardsReadOnlyPage() {
+  const { data: guards = [], isLoading, isError } = useGetGuardListQuery();
+
+  return (
+    <>
+      <div className="pageHead">
+        <div>
+          <h1 className="h1">Guardias</h1>
+          <p className="pMuted">Listado del personal operativo.</p>
+        </div>
+        <Badge tone="info">{guards.length} guardias</Badge>
+      </div>
+      <section className="panel">
+        <div className="grid gridCards">
+          {isLoading && <p className="pMuted">Cargando guardias...</p>}
+          {isError && (
+            <p className={styles.textDanger}>No fue posible cargar guardias.</p>
+          )}
+          {!isLoading && !isError && guards.length === 0 && (
+            <p className="pMuted">No hay guardias registrados.</p>
+          )}
+          {guards.map((guard) => (
+            <Card key={guard.id}>
+              <h2>{guard.fullName}</h2>
+              <p className="pMuted">No. de empleado: {guard.employeeNumber}</p>
+              <p>Estado: {guard.active ? 'Activo' : 'Inactivo'}</p>
+              <p>Contratación: {formatGuardDate(guard.hiredAt)}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function GuardsManagementPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [guardToEdit, setGuardToEdit] = useState<Guard | null>(null);
   const [guardToView, setGuardToView] = useState<Guard | null>(null);
@@ -165,7 +225,7 @@ export default function GuardsPage() {
         <div>
           <h1 className="h1">Guardias</h1>
           <p className="pMuted">
-            Control del personal operativo de seguridad en LozCorp.
+            Control del personal operativo de seguridad de tu empresa.
           </p>
         </div>
         <Badge tone="info">{filteredGuards.length} guardias</Badge>

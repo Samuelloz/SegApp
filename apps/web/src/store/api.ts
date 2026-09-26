@@ -1,19 +1,32 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type {
+import {
+  AcceptInvitationResponse,
+  AcceptInvitationInput,
+  AssignmentListItem,
   Company,
+  CompanyUserResponse,
   Contract,
+  ContractAssignmentOption,
+  ContractListItem,
   CreateAssignmentInput,
   CreateContractInput,
   CreateGuardInput,
+  CreateInvitationInput,
+  CreateInvitationResponse,
   CurrentSessionResponse,
   EndAssignmentInput,
   Guard,
+  GuardAssignmentOption,
   GuardAssignment,
+  GuardListItem,
+  InvitationPreview,
   LoginInput,
   UpdateCompanyInput,
   UpdateContractInput,
   UpdateGuardInput,
   UpdateActiveStatusInput,
+  VerifyContactInput,
+  VerifyContactResponse,
 } from '@segapp/contracts';
 
 export const api = createApi({
@@ -22,8 +35,49 @@ export const api = createApi({
     baseUrl: process.env.NEXT_PUBLIC_API_URL || '/api',
     credentials: 'include',
   }),
-  tagTypes: ['Session', 'Company', 'Contracts', 'Guards', 'Assignments'],
+  tagTypes: [
+    'Session',
+    'Company',
+    'CompanyUsers',
+    'Contracts',
+    'Guards',
+    'Assignments',
+  ],
   endpoints: (builder) => ({
+    getInvitationPreview: builder.query<InvitationPreview, string>({
+      query: (token) => `/invitations/${encodeURIComponent(token)}`,
+    }),
+
+    acceptInvitation: builder.mutation<
+      AcceptInvitationResponse,
+      AcceptInvitationInput
+    >({
+      query: (body) => ({
+        url: '/invitations/accept',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    createInvitation: builder.mutation<
+      CreateInvitationResponse,
+      CreateInvitationInput
+    >({
+      query: (body) => ({
+        url: '/invitations',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    verifyContact: builder.mutation<VerifyContactResponse, VerifyContactInput>({
+      query: (body) => ({
+        url: '/contact-verifications/verify',
+        method: 'POST',
+        body,
+      }),
+    }),
+
     login: builder.mutation<CurrentSessionResponse, LoginInput>({
       query: (body) => ({
         url: '/auth/login',
@@ -60,8 +114,26 @@ export const api = createApi({
       invalidatesTags: ['Company'],
     }),
 
+    getCompanyUsers: builder.query<CompanyUserResponse[], void>({
+      query: () => '/companies/current/users',
+      providesTags: ['CompanyUsers'],
+    }),
+
     getContracts: builder.query<Contract[], void>({
       query: () => '/contracts',
+      providesTags: ['Contracts'],
+    }),
+
+    getContractList: builder.query<ContractListItem[], void>({
+      query: () => '/contracts/list',
+      providesTags: ['Contracts'],
+    }),
+
+    getContractAssignmentOptions: builder.query<
+      ContractAssignmentOption[],
+      void
+    >({
+      query: () => '/contracts/assignment-options',
       providesTags: ['Contracts'],
     }),
 
@@ -110,6 +182,16 @@ export const api = createApi({
       providesTags: ['Guards'],
     }),
 
+    getGuardList: builder.query<GuardListItem[], void>({
+      query: () => '/guards/list',
+      providesTags: ['Guards'],
+    }),
+
+    getGuardAssignmentOptions: builder.query<GuardAssignmentOption[], void>({
+      query: () => '/guards/assignment-options',
+      providesTags: ['Guards'],
+    }),
+
     createGuard: builder.mutation<Guard, CreateGuardInput>({
       query: (body) => ({
         url: '/guards',
@@ -155,6 +237,11 @@ export const api = createApi({
       providesTags: ['Assignments'],
     }),
 
+    getAssignmentList: builder.query<AssignmentListItem[], void>({
+      query: () => '/assignments/list',
+      providesTags: ['Assignments'],
+    }),
+
     createAssignment: builder.mutation<GuardAssignment, CreateAssignmentInput>({
       query: (body) => ({
         url: '/assignments',
@@ -182,6 +269,11 @@ export const api = createApi({
 });
 
 export const {
+  useGetInvitationPreviewQuery,
+  useAcceptInvitationMutation,
+  useCreateInvitationMutation,
+  useVerifyContactMutation,
+
   useLoginMutation,
   useGetCurrentSessionQuery,
   useLogoutMutation,
@@ -189,17 +281,24 @@ export const {
   useGetCurrentCompanyQuery,
   useUpdateCurrentCompanyMutation,
 
+  useGetCompanyUsersQuery,
+
   useGetContractsQuery,
+  useGetContractListQuery,
+  useGetContractAssignmentOptionsQuery,
   useCreateContractMutation,
   useUpdateContractMutation,
   useUpdateContractStatusMutation,
 
   useGetGuardsQuery,
+  useGetGuardListQuery,
+  useGetGuardAssignmentOptionsQuery,
   useCreateGuardMutation,
   useUpdateGuardMutation,
   useUpdateGuardStatusMutation,
 
   useGetAssignmentsQuery,
+  useGetAssignmentListQuery,
   useCreateAssignmentMutation,
   useEndAssignmentMutation,
 } = api;

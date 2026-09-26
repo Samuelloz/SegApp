@@ -3,11 +3,17 @@
 import { type ChangeEvent, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import type { Contract, ContractFormValues } from '@segapp/contracts';
+import {
+  hasPermission,
+  type Contract,
+  type ContractFormValues,
+} from '@segapp/contracts';
 
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import {
   useGetContractsQuery,
+  useGetContractListQuery,
+  useGetCurrentSessionQuery,
   useCreateContractMutation,
   useUpdateContractMutation,
   useUpdateContractStatusMutation,
@@ -15,6 +21,7 @@ import {
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 
 import ContractCard from './components/ContractCard';
@@ -22,6 +29,7 @@ import ContractDetailsModal from './components/ContractDetailsModal';
 import ContractFormModal from './components/ContractFormModal';
 
 import {
+  formatContractDate,
   getEmptyContractFormValues,
   contractToFormValues,
   matchesContractSearch,
@@ -32,6 +40,71 @@ import styles from './contracts.module.css';
 const EMPTY_CONTRACT_FORM_VALUES = getEmptyContractFormValues();
 
 export default function ContractsPage() {
+  const { data: session } = useGetCurrentSessionQuery();
+
+  if (!session) return <p className="pMuted">Verificando sesión...</p>;
+
+  const roles = session.membership.roles;
+  if (!hasPermission(roles, 'contracts:list')) {
+    return <p className="pMuted">No tienes acceso a contratos.</p>;
+  }
+
+  return hasPermission(roles, 'contracts:manage') ? (
+    <ContractsManagementPage
+      canChangeStatus={hasPermission(roles, 'contracts:status')}
+    />
+  ) : (
+    <ContractsReadOnlyPage />
+  );
+}
+
+function ContractsReadOnlyPage() {
+  const {
+    data: contracts = [],
+    isLoading,
+    isError,
+  } = useGetContractListQuery();
+
+  return (
+    <>
+      <div className="pageHead">
+        <div>
+          <h1 className="h1">Contratos</h1>
+          <p className="pMuted">Listado de contratos de la empresa.</p>
+        </div>
+        <Badge tone="info">{contracts.length} contratos</Badge>
+      </div>
+      <section className="panel">
+        <div className="grid gridCards">
+          {isLoading && <p className="pMuted">Cargando contratos...</p>}
+          {isError && (
+            <p className={styles.textDanger}>
+              No fue posible cargar contratos.
+            </p>
+          )}
+          {!isLoading && !isError && contracts.length === 0 && (
+            <p className="pMuted">No hay contratos registrados.</p>
+          )}
+          {contracts.map((contract) => (
+            <Card key={contract.id}>
+              <h2>{contract.name}</h2>
+              <p className="pMuted">Cliente: {contract.clientLegalName}</p>
+              <p>Estado: {contract.active ? 'Activo' : 'Inactivo'}</p>
+              <p>Inicio: {formatContractDate(contract.startDate)}</p>
+              <p>Guardias requeridos: {contract.requiredGuardCount}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ContractsManagementPage({
+  canChangeStatus,
+}: {
+  canChangeStatus: boolean;
+}) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [contractToEdit, setContractToEdit] = useState<Contract | null>(null);
   const [contractToView, setContractToView] = useState<Contract | null>(null);
@@ -175,7 +248,7 @@ export default function ContractsPage() {
         <div>
           <h1 className="h1">Contratos</h1>
           <p className="pMuted">
-            Gestión de contratos y estatus operativo en LozCorp.
+            Gestión de contratos y estatus operativo de tu empresa.
           </p>
         </div>
         <Badge tone="info">{filteredContracts.length} contratos</Badge>
@@ -215,6 +288,7 @@ export default function ContractsPage() {
               key={contract.id}
               contract={contract}
               isUpdatingStatus={isUpdatingStatus}
+              canChangeStatus={canChangeStatus}
               onView={handleOpenDetails}
               onEdit={handleOpenEdit}
               onToggleActive={handleToggleActive}

@@ -8,15 +8,23 @@ import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 import styles from './assignments.module.css';
 
 import {
+  hasPermission,
   type AssignmentFormValues,
   type GuardAssignment,
 } from '@segapp/contracts';
 
-import { getAssignmentStatus, getCurrentTimestamp } from './assignment.utils';
+import {
+  formatAssignmentDate,
+  getAssignmentStatus,
+  getAssignmentStatusLabel,
+  getAssignmentStatusTone,
+  getCurrentTimestamp,
+} from './assignment.utils';
 
 import { type AssignmentSelectOption } from './assignment-select.styles';
 
 import Badge from '@/components/ui/Badge';
+import Card from '@/components/ui/Card';
 import AssignmentCard from './components/AssignmentCard';
 import EndAssignmentModal from './components/EndAssignmentModal';
 import AssignmentForm from './components/AssignmentForm';
@@ -25,11 +33,88 @@ import {
   useCreateAssignmentMutation,
   useEndAssignmentMutation,
   useGetAssignmentsQuery,
-  useGetContractsQuery,
-  useGetGuardsQuery,
+  useGetAssignmentListQuery,
+  useGetContractAssignmentOptionsQuery,
+  useGetGuardAssignmentOptionsQuery,
+  useGetCurrentSessionQuery,
 } from '@/store/api';
 
 export default function AssignmentsPage() {
+  const { data: session } = useGetCurrentSessionQuery();
+
+  if (!session) return <p className="pMuted">Verificando sesión...</p>;
+
+  const roles = session.membership.roles;
+  if (!hasPermission(roles, 'assignments:list')) {
+    return <p className="pMuted">No tienes acceso a asignaciones.</p>;
+  }
+
+  return hasPermission(roles, 'assignments:manage') ? (
+    <AssignmentsManagementPage />
+  ) : (
+    <AssignmentsReadOnlyPage />
+  );
+}
+
+function AssignmentsReadOnlyPage() {
+  const {
+    data: assignments = [],
+    isLoading,
+    isError,
+  } = useGetAssignmentListQuery();
+  const [currentTimestamp, setCurrentTimestamp] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(
+      () => setCurrentTimestamp(Date.now()),
+      30_000,
+    );
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  return (
+    <>
+      <div className="pageHead">
+        <div>
+          <h1 className="h1">Asignaciones</h1>
+          <p className="pMuted">Listado de asignaciones.</p>
+        </div>
+        <Badge tone="info">{assignments.length} asignaciones</Badge>
+      </div>
+      <section className="panel">
+        <div className="grid gridCards">
+          {isLoading && <p className="pMuted">Cargando asignaciones...</p>}
+          {isError && (
+            <p className={styles.errorMessage}>
+              No fue posible cargar asignaciones.
+            </p>
+          )}
+          {!isLoading && !isError && assignments.length === 0 && (
+            <p className="pMuted">No hay asignaciones registradas.</p>
+          )}
+          {assignments.map((assignment) => {
+            const status = getAssignmentStatus(assignment, currentTimestamp);
+            return (
+              <Card key={assignment.id}>
+                <h2>{assignment.guard.fullName}</h2>
+                <p className="pMuted">
+                  No. de empleado: {assignment.guard.employeeNumber}
+                </p>
+                <p>Contrato: {assignment.contract.name}</p>
+                <p>Inicio: {formatAssignmentDate(assignment.startedAt)}</p>
+                <Badge tone={getAssignmentStatusTone(status)}>
+                  {getAssignmentStatusLabel(status)}
+                </Badge>
+              </Card>
+            );
+          })}
+        </div>
+      </section>
+    </>
+  );
+}
+
+function AssignmentsManagementPage() {
   const [assignmentToEnd, setAssignmentToEnd] =
     useState<GuardAssignment | null>(null);
 
@@ -53,10 +138,11 @@ export default function AssignmentsPage() {
     error: assignmentsError,
   } = useGetAssignmentsQuery();
 
-  const { data: guards = [], isLoading: isLoadingGuards } = useGetGuardsQuery();
+  const { data: guards = [], isLoading: isLoadingGuards } =
+    useGetGuardAssignmentOptionsQuery();
 
   const { data: contracts = [], isLoading: isLoadingContracts } =
-    useGetContractsQuery();
+    useGetContractAssignmentOptionsQuery();
 
   const [createAssignment, { isLoading: isCreating }] =
     useCreateAssignmentMutation();

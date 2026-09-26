@@ -1,38 +1,46 @@
 'use client';
 
-import { useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { useEffect } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 
-import { useGetCurrentCompanyQuery, useUpdateCurrentCompanyMutation } from "@/store/api";
-import { companySettingsSchema, type CompanyFormValues } from "@segapp/contracts";
+import {
+  useGetCurrentCompanyQuery,
+  useGetCurrentSessionQuery,
+  useUpdateCurrentCompanyMutation,
+} from '@/store/api';
+import {
+  companySettingsSchema,
+  hasPermission,
+  type CompanyFormValues,
+} from '@segapp/contracts';
 import styles from './settings.module.css';
-import { getApiErrorMessage } from "@/lib/getApiErrorMessage";
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
 
 export default function SettingsPage() {
+  const { data: session } = useGetCurrentSessionQuery();
+  const canEditCompany = hasPermission(
+    session?.membership.roles ?? [],
+    'company:manage',
+  );
   const {
     data: company,
     isLoading,
     error,
-  } = useGetCurrentCompanyQuery();
+  } = useGetCurrentCompanyQuery(undefined, { skip: !canEditCompany });
 
-  const [
-    updateCurrentCompany,
-    { isLoading: isUpdating },
-  ] = useUpdateCurrentCompanyMutation();
+  const [updateCurrentCompany, { isLoading: isUpdating }] =
+    useUpdateCurrentCompanyMutation();
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: {
-      errors,
-      isDirty,
-    },
+    formState: { errors, isDirty },
   } = useForm<CompanyFormValues>({
     resolver: zodResolver(companySettingsSchema),
     mode: 'onChange',
@@ -60,9 +68,9 @@ export default function SettingsPage() {
   }, [company, reset]);
 
   async function onSave(values: CompanyFormValues) {
-    const toastId = toast.loading(
-      'Guardando configuración...',
-    );
+    if (!canEditCompany) return;
+
+    const toastId = toast.loading('Guardando configuración...');
 
     try {
       const updateCompany = await updateCurrentCompany(values).unwrap();
@@ -91,12 +99,18 @@ export default function SettingsPage() {
     }
   }
 
-  if (isLoading) {
+  if (!session) {
+    return <div className={styles.status}>Verificando sesión...</div>;
+  }
+
+  if (!canEditCompany) {
     return (
-      <div className={styles.status}>
-        Cargando configuración...
-      </div>
-    )
+      <div className={styles.error}>No tienes acceso a Configuración.</div>
+    );
+  }
+
+  if (isLoading) {
+    return <div className={styles.status}>Cargando configuración...</div>;
   }
 
   if (error || !company) {
@@ -104,7 +118,7 @@ export default function SettingsPage() {
       <div className={styles.error}>
         No fue posible cargar la configuración de la empresa.
       </div>
-    )
+    );
   }
 
   return (
@@ -113,9 +127,7 @@ export default function SettingsPage() {
         <div>
           <h1 className="h1">Configuración</h1>
 
-          <p className="pMuted">
-            Información general de la empresa
-          </p>
+          <p className="pMuted">Información general de la empresa</p>
         </div>
       </div>
 
@@ -127,10 +139,7 @@ export default function SettingsPage() {
         >
           <div className={styles.grid}>
             <div className={styles.field}>
-              <label
-                className={styles.label}
-                htmlFor="company-name"
-              >
+              <label className={styles.label} htmlFor="company-name">
                 Nombre de la empresa *
               </label>
 
@@ -138,21 +147,17 @@ export default function SettingsPage() {
                 id="company-name"
                 {...register('name')}
                 aria-invalid={Boolean(errors.name)}
+                readOnly={!canEditCompany}
                 placeholder="Ej. LozCorp"
               />
 
               {errors.name && (
-                <div className={styles.fieldError}>
-                  {errors.name.message}
-                </div>
+                <div className={styles.fieldError}>{errors.name.message}</div>
               )}
             </div>
 
             <div className={styles.field}>
-              <label
-                className={styles.label}
-                htmlFor="company-legal-name"
-              >
+              <label className={styles.label} htmlFor="company-legal-name">
                 Razón Social
               </label>
 
@@ -160,6 +165,7 @@ export default function SettingsPage() {
                 id="company-legal-name"
                 {...register('legalName')}
                 aria-invalid={Boolean(errors.legalName)}
+                readOnly={!canEditCompany}
                 placeholder="Ej. LozCorp Seguridad Privada"
               />
 
@@ -171,10 +177,7 @@ export default function SettingsPage() {
             </div>
 
             <div className={styles.field}>
-              <label
-                className={styles.label}
-                htmlFor="company-rfc"
-              >
+              <label className={styles.label} htmlFor="company-rfc">
                 RFC
               </label>
 
@@ -182,21 +185,17 @@ export default function SettingsPage() {
                 id="company-rfc"
                 {...register('rfc')}
                 aria-invalid={Boolean(errors.rfc)}
+                readOnly={!canEditCompany}
                 placeholder="EJ. LOC010101ABC"
               />
 
               {errors.rfc && (
-                <div className={styles.fieldError}>
-                  {errors.rfc.message}
-                </div>
+                <div className={styles.fieldError}>{errors.rfc.message}</div>
               )}
             </div>
 
             <div className={styles.field}>
-              <label
-                className={styles.label}
-                htmlFor="company-timezone"
-              >
+              <label className={styles.label} htmlFor="company-timezone">
                 Zona horaria *
               </label>
 
@@ -204,6 +203,7 @@ export default function SettingsPage() {
                 id="company-timezone"
                 {...register('timezone')}
                 aria-invalid={Boolean(errors.timezone)}
+                readOnly={!canEditCompany}
                 placeholder="America/Mexico_City"
               />
 
@@ -215,10 +215,7 @@ export default function SettingsPage() {
             </div>
 
             <div className={`${styles.field} ${styles.fullWidth}`}>
-              <label
-                className={styles.label}
-                htmlFor="company-address"
-              >
+              <label className={styles.label} htmlFor="company-address">
                 Dirección
               </label>
 
@@ -227,6 +224,7 @@ export default function SettingsPage() {
                 {...register('address')}
                 className={styles.textarea}
                 aria-invalid={Boolean(errors.address)}
+                readOnly={!canEditCompany}
                 placeholder="Dirección general de la empresa"
                 rows={4}
               />
@@ -239,40 +237,36 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className={styles.actions}>
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={!isDirty || isUpdating}
-              onClick={() => {
-                if (!company) {
-                  return
-                }
+          {canEditCompany && (
+            <div className={styles.actions}>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!isDirty || isUpdating}
+                onClick={() => {
+                  if (!company) {
+                    return;
+                  }
 
-                reset({
-                  name: company.name,
-                  legalName: company.legalName ?? '',
-                  rfc: company.rfc ?? '',
-                  address: company.address ?? '',
-                  timezone: company.timezone,
-                })
-              }}
-            >
-              Descartar cambios
-            </Button>
+                  reset({
+                    name: company.name,
+                    legalName: company.legalName ?? '',
+                    rfc: company.rfc ?? '',
+                    address: company.address ?? '',
+                    timezone: company.timezone,
+                  });
+                }}
+              >
+                Descartar cambios
+              </Button>
 
-            <Button
-              type="submit"
-              disabled={!isDirty || isUpdating}
-            >
-              {isUpdating ?
-                'Guardando...' :
-                'Guardar Cambios'
-              }
-            </Button>
-          </div>
+              <Button type="submit" disabled={!isDirty || isUpdating}>
+                {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
+              </Button>
+            </div>
+          )}
         </form>
       </section>
     </>
-  )
+  );
 }

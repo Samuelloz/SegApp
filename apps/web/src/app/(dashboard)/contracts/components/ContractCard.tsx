@@ -11,6 +11,7 @@ import styles from './ContractCard.module.css';
 type ContractCardProps = {
   contract: Contract;
   isUpdatingStatus: boolean;
+  canChangeStatus: boolean;
   onView: (contract: Contract) => void;
   onEdit: (contract: Contract) => void;
   onToggleActive: (contract: Contract) => void;
@@ -19,6 +20,7 @@ type ContractCardProps = {
 export default function ContractCard({
   contract,
   isUpdatingStatus,
+  canChangeStatus,
   onView,
   onEdit,
   onToggleActive,
@@ -55,10 +57,10 @@ export default function ContractCard({
 
         <Badge
           tone={contract.active ? 'ok' : 'warn'}
-          onClick={handleToggleActive}
-          className={styles.badgeBtn}
-          aria-disabled={isUpdatingStatus}
-          title="Clic para cambiar estatus"
+          onClick={canChangeStatus ? handleToggleActive : undefined}
+          className={canChangeStatus ? styles.badgeBtn : undefined}
+          aria-disabled={canChangeStatus && isUpdatingStatus}
+          title={canChangeStatus ? 'Clic para cambiar estatus' : undefined}
         >
           {contract.active ? 'Activo' : 'Inactivo'}
         </Badge>
