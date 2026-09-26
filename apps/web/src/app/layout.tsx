@@ -1,4 +1,5 @@
 import './globals.css';
+import 'country-flag-icons/3x2/flags.css';
 import 'react-datepicker/dist/react-datepicker.css';
 
 import type { Metadata } from 'next';

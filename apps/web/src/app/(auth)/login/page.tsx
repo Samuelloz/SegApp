@@ -3,19 +3,22 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@segapp/contracts';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import InternationalPhoneField from '@/components/ui/InternationalPhoneField';
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import { isValidE164PhoneNumber } from '@/lib/phone-number';
 import { useGetCurrentSessionQuery, useLoginMutation } from '@/store/api';
 
 import styles from './login.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
 
   const { data: session, isLoading: isCheckingSession } =
     useGetCurrentSessionQuery(undefined, {
@@ -25,24 +28,36 @@ export default function LoginPage() {
   const [login, { isLoading }] = useLoginMutation();
 
   const {
+    clearErrors,
+    control,
     register,
     handleSubmit,
+    setError,
+    setValue,
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      identifier: '',
       password: '',
     },
   });
 
   useEffect(() => {
     if (session) {
-      router.replace('/guards');
+      router.replace('/');
     }
   }, [router, session]);
 
   async function onSubmit(values: LoginInput): Promise<void> {
+    if (loginMethod === 'phone' && !isValidE164PhoneNumber(values.identifier)) {
+      setError('identifier', {
+        type: 'validate',
+        message: 'Ingresa un número válido para el país seleccionado.',
+      });
+      return;
+    }
+
     const toastId = toast.loading('Iniciando sesión...');
 
     try {
@@ -52,13 +67,27 @@ export default function LoginPage() {
         id: toastId,
       });
 
-      router.replace('/guards');
+      router.replace('/');
       router.refresh();
     } catch (error: unknown) {
       toast.error(getApiErrorMessage(error, 'No fue posible iniciar sesión.'), {
         id: toastId,
       });
     }
+  }
+
+  function changeLoginMethod(nextMethod: 'email' | 'phone'): void {
+    if (nextMethod === loginMethod) {
+      return;
+    }
+
+    setLoginMethod(nextMethod);
+    setValue('identifier', '', {
+      shouldDirty: false,
+      shouldTouch: false,
+      shouldValidate: false,
+    });
+    clearErrors('identifier');
   }
 
   if (isCheckingSession || session) {
@@ -94,32 +123,76 @@ export default function LoginPage() {
           onSubmit={handleSubmit(onSubmit)}
           noValidate
         >
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="login-email">
-              Correo electrónico
-            </label>
+          <fieldset className={styles.methodFieldset}>
+            <legend className={styles.label}>Iniciar sesión con</legend>
 
-            <Input
-              id="login-email"
-              type="email"
-              autoComplete="email"
-              autoFocus
-              placeholder="nombre@empresa.com"
-              {...register('email')}
-              aria-invalid={Boolean(errors.email)}
-              aria-describedby={errors.email ? 'login-email-error' : undefined}
-            />
-
-            {errors.email && (
-              <p
-                id="login-email-error"
-                className={styles.fieldError}
-                role="alert"
+            <div className={styles.methodOptions}>
+              <button
+                className={styles.methodButton}
+                data-active={loginMethod === 'email'}
+                type="button"
+                aria-pressed={loginMethod === 'email'}
+                onClick={() => changeLoginMethod('email')}
               >
-                {errors.email.message}
-              </p>
-            )}
-          </div>
+                Correo electrónico
+              </button>
+
+              <button
+                className={styles.methodButton}
+                data-active={loginMethod === 'phone'}
+                type="button"
+                aria-pressed={loginMethod === 'phone'}
+                onClick={() => changeLoginMethod('phone')}
+              >
+                Teléfono
+              </button>
+            </div>
+          </fieldset>
+
+          {loginMethod === 'email' ? (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="login-identifier">
+                Correo electrónico
+              </label>
+
+              <Input
+                id="login-identifier"
+                type="email"
+                autoComplete="username"
+                autoFocus
+                placeholder="nombre@empresa.com"
+                {...register('identifier')}
+                aria-invalid={Boolean(errors.identifier)}
+                aria-describedby={
+                  errors.identifier ? 'login-identifier-error' : undefined
+                }
+              />
+
+              {errors.identifier && (
+                <p
+                  id="login-identifier-error"
+                  className={styles.fieldError}
+                  role="alert"
+                >
+                  {errors.identifier.message}
+                </p>
+              )}
+            </div>
+          ) : (
+            <Controller
+              control={control}
+              name="identifier"
+              render={({ field }) => (
+                <InternationalPhoneField
+                  inputId="login-identifier"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.identifier?.message}
+                />
+              )}
+            />
+          )}
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor="login-password">

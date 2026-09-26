@@ -1,0 +1,55 @@
+.field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.inputs {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.5fr) minmax(150px, 1.5fr);
+  gap: 10px;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.countryOption {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+}
+
+.countryFlag {
+  flex: 0 0 auto;
+  width: 18px !important;
+  height: 12px !important;
+  border-radius: 2px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.countryOption > :last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .inputs {
+    grid-template-columns: 1fr;
+  }
+}
