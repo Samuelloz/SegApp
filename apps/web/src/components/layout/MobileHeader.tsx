@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 
-import { useGetCurrentCompanyQuery } from '@/store/api';
+import { useGetCurrentSessionQuery } from '@/store/api';
 import { Menu } from 'lucide-react';
 
 import styles from './MobileHeader.module.css';
@@ -13,7 +13,7 @@ type MobileHeaderProps = {
 };
 
 export default function MobileHeader({ open, onOpen }: MobileHeaderProps) {
-  const { data: company } = useGetCurrentCompanyQuery();
+  const { data: session } = useGetCurrentSessionQuery();
 
   function handleOpen() {
     onOpen();
@@ -35,7 +35,9 @@ export default function MobileHeader({ open, onOpen }: MobileHeaderProps) {
       <Link href="/" className={styles.brand}>
         <span className={styles.logo} />
         <div className={styles.brandText}>
-          <div className={styles.brandName}>{company?.name ?? 'SegApp'}</div>
+          <div className={styles.brandName}>
+            {session?.membership.company.name ?? 'SegApp'}
+          </div>
         </div>
       </Link>
     </header>

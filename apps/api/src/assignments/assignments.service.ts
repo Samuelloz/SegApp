@@ -6,33 +6,59 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
-import { DEFAULT_COMPANY_ID } from '../companies/company.constants';
+
+const assignmentSelect = {
+  id: true,
+  guardId: true,
+  contractId: true,
+  companyId: true,
+  startedAt: true,
+  endedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  guard: { select: { fullName: true, employeeNumber: true } },
+  contract: { select: { name: true } },
+} as const;
+
+const assignmentListSelect = {
+  id: true,
+  startedAt: true,
+  endedAt: true,
+  guard: { select: { fullName: true, employeeNumber: true } },
+  contract: { select: { name: true } },
+} as const;
 
 @Injectable()
 export class AssignmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  findAll(companyId: string) {
     return this.prisma.guardAssignment.findMany({
-      where: {
-        companyId: DEFAULT_COMPANY_ID,
-      },
-      include: {
-        guard: true,
-        contract: true,
-      },
-      orderBy: {
-        startedAt: 'desc',
-      },
+      where: { companyId },
+      select: assignmentSelect,
+      orderBy: { startedAt: 'desc' },
     });
   }
 
-  async assignGuard(guardId: string, contractId: string, startedAt?: Date) {
+  findList(companyId: string) {
+    return this.prisma.guardAssignment.findMany({
+      where: { companyId },
+      select: assignmentListSelect,
+      orderBy: { startedAt: 'desc' },
+    });
+  }
+
+  async assignGuard(
+    companyId: string,
+    guardId: string,
+    contractId: string,
+    startedAt?: Date,
+  ) {
     const [guard, contract, currentAssignment] = await Promise.all([
       this.prisma.guard.findFirst({
         where: {
           id: guardId,
-          companyId: DEFAULT_COMPANY_ID,
+          companyId: companyId,
           deletedAt: null,
         },
       }),
@@ -40,7 +66,7 @@ export class AssignmentsService {
       this.prisma.contract.findFirst({
         where: {
           id: contractId,
-          companyId: DEFAULT_COMPANY_ID,
+          companyId: companyId,
           deletedAt: null,
         },
       }),
@@ -48,7 +74,7 @@ export class AssignmentsService {
       this.prisma.guardAssignment.findFirst({
         where: {
           guardId,
-          companyId: DEFAULT_COMPANY_ID,
+          companyId: companyId,
           endedAt: null,
         },
       }),
@@ -82,21 +108,22 @@ export class AssignmentsService {
       data: {
         guardId,
         contractId,
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
         ...(startedAt ? { startedAt } : {}),
       },
-      include: {
-        guard: true,
-        contract: true,
-      },
+      select: assignmentSelect,
     });
   }
 
-  async endAssignment(id: string, endedAt: Date = new Date()) {
-    const assignment = await this.prisma.guardAssignment.findUnique({
+  async endAssignment(
+    companyId: string,
+    id: string,
+    endedAt: Date = new Date(),
+  ) {
+    const assignment = await this.prisma.guardAssignment.findFirst({
       where: {
         id,
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
       },
     });
 
@@ -129,10 +156,7 @@ export class AssignmentsService {
         endedAt,
       },
 
-      include: {
-        guard: true,
-        contract: true,
-      },
+      select: assignmentSelect,
     });
   }
 }

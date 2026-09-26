@@ -1,28 +1,46 @@
-import { createAssignmentSchema, endAssignmentSchema } from '@segapp/contracts';
+import {
+  createAssignmentSchema,
+  endAssignmentSchema,
+  rolesFor,
+} from '@segapp/contracts';
 
 import {
   BadRequestException,
   Body,
   Controller,
   Get,
+  Param,
   Patch,
   Post,
-  Param,
+  UseGuards,
 } from '@nestjs/common';
 
+import { CurrentCompanyId } from '../auth/current-company-id.decorator';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { AssignmentsService } from './assignments.service';
 
+@UseGuards(SessionAuthGuard, RolesGuard)
 @Controller('assignments')
 export class AssignmentsController {
   constructor(private service: AssignmentsService) {}
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  @Roles(...rolesFor('assignments:manage'))
+  findAll(@CurrentCompanyId() companyId: string) {
+    return this.service.findAll(companyId);
+  }
+
+  @Get('list')
+  @Roles(...rolesFor('assignments:list'))
+  findList(@CurrentCompanyId() companyId: string) {
+    return this.service.findList(companyId);
   }
 
   @Post()
-  create(@Body() body: unknown) {
+  @Roles(...rolesFor('assignments:manage'))
+  create(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = createAssignmentSchema.safeParse(body);
 
     if (!result.success) {
@@ -37,11 +55,16 @@ export class AssignmentsController {
 
     const startedAt = startedAtValue ? new Date(startedAtValue) : undefined;
 
-    return this.service.assignGuard(guardId, contractId, startedAt);
+    return this.service.assignGuard(companyId, guardId, contractId, startedAt);
   }
 
   @Patch(':id/end')
-  endAssignment(@Param('id') id: string, @Body() body: unknown) {
+  @Roles(...rolesFor('assignments:manage'))
+  endAssignment(
+    @CurrentCompanyId() companyId: string,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
     const result = endAssignmentSchema.safeParse(body);
 
     if (!result.success) {
@@ -55,6 +78,6 @@ export class AssignmentsController {
       ? new Date(result.data.endedAt)
       : undefined;
 
-    return this.service.endAssignment(id, endedAt);
+    return this.service.endAssignment(companyId, id, endedAt);
   }
 }

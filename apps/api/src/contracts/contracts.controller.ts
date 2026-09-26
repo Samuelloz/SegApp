@@ -1,7 +1,8 @@
 import {
   createContractSchema,
-  updateContractSchema,
+  rolesFor,
   updateActiveStatusSchema,
+  updateContractSchema,
 } from '@segapp/contracts';
 
 import {
@@ -9,24 +10,44 @@ import {
   Body,
   Controller,
   Get,
-  Post,
-  Patch,
   Param,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
 
+import { CurrentCompanyId } from '../auth/current-company-id.decorator';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { ContractsService } from './contracts.service';
 
+@UseGuards(SessionAuthGuard, RolesGuard)
 @Controller('contracts')
 export class ContractsController {
   constructor(private service: ContractsService) {}
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  @Roles(...rolesFor('contracts:manage'))
+  findAll(@CurrentCompanyId() companyId: string) {
+    return this.service.findAll(companyId);
+  }
+
+  @Get('list')
+  @Roles(...rolesFor('contracts:list'))
+  findList(@CurrentCompanyId() companyId: string) {
+    return this.service.findList(companyId);
+  }
+
+  @Get('assignment-options')
+  @Roles(...rolesFor('assignments:manage'))
+  findAssignmentOptions(@CurrentCompanyId() companyId: string) {
+    return this.service.findAssignmentOptions(companyId);
   }
 
   @Post()
-  create(@Body() body: unknown) {
+  @Roles(...rolesFor('contracts:manage'))
+  create(@CurrentCompanyId() companyId: string, @Body() body: unknown) {
     const result = createContractSchema.safeParse(body);
 
     if (!result.success) {
@@ -37,11 +58,16 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    return this.service.create(result.data);
+    return this.service.create(companyId, result.data);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() body: unknown) {
+  @Roles(...rolesFor('contracts:manage'))
+  update(
+    @CurrentCompanyId() companyId: string,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
     const result = updateContractSchema.safeParse(body);
 
     if (!result.success) {
@@ -52,11 +78,16 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    return this.service.update(id, result.data);
+    return this.service.update(companyId, id, result.data);
   }
 
   @Patch(':id/status')
-  updateStatus(@Param('id') id: string, @Body() body: unknown) {
+  @Roles(...rolesFor('contracts:status'))
+  updateStatus(
+    @CurrentCompanyId() companyId: string,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
     const result = updateActiveStatusSchema.safeParse(body);
 
     if (!result.success) {
@@ -67,6 +98,6 @@ export class ContractsController {
       throw new BadRequestException(message);
     }
 
-    return this.service.updateActiveStatus(id, result.data.active);
+    return this.service.updateActiveStatus(companyId, id, result.data.active);
   }
 }

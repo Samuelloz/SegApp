@@ -12,6 +12,121 @@ datasource db {
   provider = "postgresql"
 }
 
+enum MembershipRole {
+  OWNER
+  ADMIN
+  SALES
+  CONTRACT_MANAGER
+  GUARD_MANAGER
+  SUPERVISOR
+  VIEWER
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum InvitationDeliveryChannel {
+  EMAIL
+  WHATSAPP
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String?   @unique
+  phoneE164       String?   @unique
+  passwordHash    String
+  name            String
+  active          Boolean   @default(true)
+  emailVerifiedAt DateTime?
+  phoneVerifiedAt DateTime?
+
+  membership         CompanyMembership?
+  invitationsSent    Invitation[]          @relation("InvitationSender")
+  verificationTokens ContactVerification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CompanyMembership {
+  id        String           @id @default(cuid())
+  roles     MembershipRole[] @default([VIEWER])
+  status    MembershipStatus @default(ACTIVE)
+  companyId String
+  userId    String           @unique
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  sessions Session[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  tokenHash    String    @unique
+  membershipId String
+  expiresAt    DateTime
+  lastUsedAt   DateTime?
+  revokedAt    DateTime?
+  ipHash       String?
+  userAgent    String?
+
+  membership CompanyMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([membershipId])
+  @@index([expiresAt])
+}
+
+model Invitation {
+  id              String                    @id @default(cuid())
+  email           String?
+  phoneE164       String?
+  deliveryChannel InvitationDeliveryChannel
+  roles           MembershipRole[]
+  tokenHash       String                    @unique
+  companyId       String
+  invitedById     String
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  invitedBy User    @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId, email])
+  @@index([companyId, phoneE164])
+  @@index([invitedById])
+  @@index([expiresAt])
+}
+
+model ContactVerification {
+  id              String                    @id @default(cuid())
+  tokenHash       String                    @unique
+  deliveryChannel InvitationDeliveryChannel
+  contactValue    String
+  userId          String
+  expiresAt       DateTime
+  consumedAt      DateTime?
+  revokedAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, deliveryChannel])
+  @@index([expiresAt])
+}
+
 model Company {
   id        String  @id @default(cuid())
   name      String
@@ -25,6 +140,8 @@ model Company {
   guards      Guard[]
   contracts   Contract[]
   assignments GuardAssignment[]
+  memberships CompanyMembership[]
+  invitations Invitation[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

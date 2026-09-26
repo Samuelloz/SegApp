@@ -7,31 +7,57 @@ import {
 } from '@nestjs/common';
 
 import { Prisma } from '@prisma/client';
-
-import { DEFAULT_COMPANY_ID } from '../companies/company.constants';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class GuardService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  findAll(companyId: string) {
     return this.prisma.guard.findMany({
       where: {
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
+        deletedAt: null,
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async create(data: CreateGuardInput) {
-    await this.ensureUniqueIdentifiers(data);
+  findList(companyId: string) {
+    return this.prisma.guard.findMany({
+      where: { companyId, deletedAt: null },
+      select: {
+        id: true,
+        fullName: true,
+        employeeNumber: true,
+        active: true,
+        hiredAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findAssignmentOptions(companyId: string) {
+    return this.prisma.guard.findMany({
+      where: { companyId, deletedAt: null, active: true },
+      select: {
+        id: true,
+        fullName: true,
+        employeeNumber: true,
+        active: true,
+      },
+      orderBy: { fullName: 'asc' },
+    });
+  }
+
+  async create(companyId: string, data: CreateGuardInput) {
+    await this.ensureUniqueIdentifiers(companyId, data);
 
     try {
       return await this.prisma.guard.create({
         data: {
           ...this.prepareGuardData(data),
-          companyId: DEFAULT_COMPANY_ID,
+          companyId: companyId,
         },
       });
     } catch (error: unknown) {
@@ -39,11 +65,37 @@ export class GuardService {
     }
   }
 
-  async updateActiveStatus(id: string, active: boolean) {
+  async update(companyId: string, id: string, data: UpdateGuardInput) {
+    const current = await this.prisma.guard.findFirst({
+      where: {
+        id,
+        companyId: companyId,
+        deletedAt: null,
+      },
+    });
+
+    if (!current) {
+      throw new NotFoundException('Guardia no encontrado.');
+    }
+
+    await this.ensureUniqueIdentifiers(companyId, data, id);
+
+    try {
+      return await this.prisma.guard.update({
+        where: { id },
+        data: this.prepareGuardData(data),
+      });
+    } catch (error: unknown) {
+      this.handlePrismaError(error);
+    }
+  }
+
+  async updateActiveStatus(companyId: string, id: string, active: boolean) {
     const existingGuard = await this.prisma.guard.findFirst({
       where: {
         id,
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -58,30 +110,6 @@ export class GuardService {
       where: { id },
       data: { active },
     });
-  }
-
-  async update(id: string, data: UpdateGuardInput) {
-    const current = await this.prisma.guard.findFirst({
-      where: {
-        id,
-        companyId: DEFAULT_COMPANY_ID,
-      },
-    });
-
-    if (!current) {
-      throw new NotFoundException('Guardia no encontrado.');
-    }
-
-    await this.ensureUniqueIdentifiers(data, id);
-
-    try {
-      return await this.prisma.guard.update({
-        where: { id },
-        data: this.prepareGuardData(data),
-      });
-    } catch (error: unknown) {
-      this.handlePrismaError(error);
-    }
   }
 
   private prepareGuardData(data: CreateGuardInput | UpdateGuardInput) {
@@ -171,12 +199,13 @@ export class GuardService {
   }
 
   private async ensureUniqueIdentifiers(
+    companyId: string,
     data: CreateGuardInput | UpdateGuardInput,
     excludedId?: string,
   ): Promise<void> {
     const duplicates = await this.prisma.guard.findMany({
       where: {
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
         ...(excludedId ? { id: { not: excludedId } } : {}),
         OR: [
           { employeeNumber: data.employeeNumber },

@@ -5,36 +5,61 @@ import type {
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { DEFAULT_COMPANY_ID } from '../companies/company.constants';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ContractsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  findAll(companyId: string) {
     return this.prisma.contract.findMany({
       where: {
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
+        deletedAt: null,
       },
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  create(data: CreateContractInput) {
+  findList(companyId: string) {
+    return this.prisma.contract.findMany({
+      where: { companyId, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        clientLegalName: true,
+        startDate: true,
+        endDate: true,
+        requiredGuardCount: true,
+        active: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findAssignmentOptions(companyId: string) {
+    return this.prisma.contract.findMany({
+      where: { companyId, deletedAt: null, active: true },
+      select: { id: true, name: true, active: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  create(companyId: string, data: CreateContractInput) {
     return this.prisma.contract.create({
       data: {
         ...this.prepareContractData(data),
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
       },
     });
   }
 
-  async update(id: string, data: UpdateContractInput) {
+  async update(companyId: string, id: string, data: UpdateContractInput) {
     const current = await this.prisma.contract.findFirst({
       where: {
         id,
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
+        deletedAt: null,
       },
     });
 
@@ -48,11 +73,12 @@ export class ContractsService {
     });
   }
 
-  async updateActiveStatus(id: string, active: boolean) {
+  async updateActiveStatus(companyId: string, id: string, active: boolean) {
     const existingContract = await this.prisma.contract.findFirst({
       where: {
         id,
-        companyId: DEFAULT_COMPANY_ID,
+        companyId: companyId,
+        deletedAt: null,
       },
       select: { id: true },
     });

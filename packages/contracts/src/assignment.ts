@@ -17,8 +17,7 @@ const assignmentFormDateSchema = z
   .string()
   .trim()
   .refine(
-    (value) =>
-      value === '' || !Number.isNaN(new Date(value).getTime()),
+    (value) => value === '' || !Number.isNaN(new Date(value).getTime()),
     'La fecha de inicio no es válida.',
   );
 
@@ -26,8 +25,7 @@ const optionalApiDateSchema = z
   .string()
   .trim()
   .refine(
-    (value) =>
-      value === '' || !Number.isNaN(new Date(value).getTime()),
+    (value) => value === '' || !Number.isNaN(new Date(value).getTime()),
     'La fecha no es válida.',
   )
   .transform((value) => value || undefined)
@@ -60,11 +58,23 @@ export const guardAssignmentResponseSchema = z.object({
   endedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
-  guard: guardResponseSchema,
-  contract: contractResponseSchema,
+  guard: guardResponseSchema.pick({
+    fullName: true,
+    employeeNumber: true,
+  }),
+  contract: contractResponseSchema.pick({ name: true }),
+});
+
+export const assignmentListItemSchema = guardAssignmentResponseSchema.pick({
+  id: true,
+  startedAt: true,
+  endedAt: true,
+  guard: true,
+  contract: true,
 });
 
 export type AssignmentFormValues = z.infer<typeof assignmentFormSchema>;
 export type CreateAssignmentInput = z.infer<typeof createAssignmentSchema>;
 export type EndAssignmentInput = z.infer<typeof endAssignmentSchema>;
 export type GuardAssignment = z.infer<typeof guardAssignmentResponseSchema>;
+export type AssignmentListItem = z.infer<typeof assignmentListItemSchema>;
