@@ -5,8 +5,7 @@ import {
 } from '@nestjs/common';
 import { GUARDS_METADATA, HTTP_CODE_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
-import { Test, TestingModule } from '@nestjs/testing';
-
+import { Test, type TestingModule } from '@nestjs/testing';
 import type { Response } from 'express';
 
 import { SESSION_COOKIE_NAME, SESSION_COOKIE_OPTIONS } from './auth.constants';
@@ -86,6 +85,7 @@ describe('AuthController', () => {
     await expect(
       controller.login(
         {
+          companySlug: 'seguridad-del-norte',
           identifier: 'correo-inválido',
           password: '',
         },
@@ -98,6 +98,25 @@ describe('AuthController', () => {
     expect(responseMock.setHeader).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['sin empresa', undefined],
+    ['con una empresa de formato inválido', 'seguridad del norte'],
+  ])('rechaza un inicio de sesión %s', async (_case, companySlug) => {
+    await expect(
+      controller.login(
+        {
+          companySlug,
+          identifier: 'usuario@segapp.test',
+          password: 'una contraseña segura',
+        },
+        responseMock as unknown as Response,
+      ),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(authServiceMock.login).not.toHaveBeenCalled();
+    expect(responseMock.cookie).not.toHaveBeenCalled();
+  });
+
   it('crea la cookie segura y devuelve la sesión actual', async () => {
     authServiceMock.login.mockResolvedValue({
       token: 'token-original',
@@ -106,6 +125,7 @@ describe('AuthController', () => {
 
     const result = await controller.login(
       {
+        companySlug: ' Seguridad-Del-Norte ',
         identifier: ' USUARIO@SEGAPP.TEST ',
         password: 'una contraseña segura',
       },
@@ -113,6 +133,7 @@ describe('AuthController', () => {
     );
 
     expect(authServiceMock.login).toHaveBeenCalledWith({
+      companySlug: 'seguridad-del-norte',
       identifier: 'usuario@segapp.test',
       password: 'una contraseña segura',
     });
@@ -143,6 +164,7 @@ describe('AuthController', () => {
 
     await controller.login(
       {
+        companySlug: 'seguridad-del-norte',
         identifier: ' +528711234567 ',
         password: 'una contraseña segura',
       },
@@ -150,6 +172,7 @@ describe('AuthController', () => {
     );
 
     expect(authServiceMock.login).toHaveBeenCalledWith({
+      companySlug: 'seguridad-del-norte',
       identifier: '+528711234567',
       password: 'una contraseña segura',
     });
@@ -163,6 +186,7 @@ describe('AuthController', () => {
     await expect(
       controller.login(
         {
+          companySlug: 'seguridad-del-norte',
           identifier: 'usuario@segapp.test',
           password: 'contraseña incorrecta',
         },
