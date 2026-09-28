@@ -1,22 +1,31 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, type LoginInput } from '@segapp/contracts';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
+import {
+  companySlugSchema,
+  loginSchema,
+  type LoginInput,
+} from '@segapp/contracts';
 
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import InternationalPhoneField from '@/components/ui/InternationalPhoneField';
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import { saveLastCompanySlug } from '@/lib/last-company-slug';
 import { isValidE164PhoneNumber } from '@/lib/phone-number';
 import { useGetCurrentSessionQuery, useLoginMutation } from '@/store/api';
 
 import styles from './login.module.css';
 
 export default function LoginPage() {
+  const params = useParams<{ companySlug: string }>();
+  const companySlugResult = companySlugSchema.safeParse(params.companySlug);
+  const companySlug = companySlugResult.success ? companySlugResult.data : '';
   const router = useRouter();
   const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
 
@@ -38,6 +47,7 @@ export default function LoginPage() {
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
+      companySlug,
       identifier: '',
       password: '',
     },
@@ -62,6 +72,8 @@ export default function LoginPage() {
 
     try {
       await login(values).unwrap();
+
+      saveLastCompanySlug(values.companySlug);
 
       toast.success('Sesión iniciada correctamente.', {
         id: toastId,
@@ -95,6 +107,17 @@ export default function LoginPage() {
       <main className={styles.page}>
         <p className={styles.status}>
           {session ? 'Redirigiendo al panel...' : 'Verificando sesión...'}
+        </p>
+      </main>
+    );
+  }
+
+  if (!companySlugResult.success) {
+    return (
+      <main className={styles.page}>
+        <p className={styles.status}>
+          El enlace de inicio de sesión no es válido. Solicita el enlace
+          correcto a tu administrador.
         </p>
       </main>
     );
