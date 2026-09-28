@@ -16,8 +16,7 @@ const companyRfcSchema = z
   .trim()
   .transform((value) => value.toUpperCase())
   .refine(
-    (value) =>
-      value === '' || /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(value),
+    (value) => value === '' || /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(value),
     'El RFC no tiene un formato válido.',
   );
 
@@ -30,6 +29,15 @@ const companyTimezoneSchema = z
   .string()
   .trim()
   .min(1, 'La zona horaria es obligatoria.');
+
+export const companySlugSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(
+    /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/,
+    'La empresa indicada no es válida.',
+  );
 
 export const companySettingsSchema = z.object({
   name: companyNameSchema,
