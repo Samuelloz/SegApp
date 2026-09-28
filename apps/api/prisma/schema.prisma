@@ -35,8 +35,9 @@ enum InvitationDeliveryChannel {
 
 model User {
   id              String    @id @default(cuid())
-  email           String?   @unique
-  phoneE164       String?   @unique
+  companyId       String
+  email           String?
+  phoneE164       String?
   passwordHash    String
   name            String
   active          Boolean   @default(true)
@@ -46,9 +47,14 @@ model User {
   membership         CompanyMembership?
   invitationsSent    Invitation[]          @relation("InvitationSender")
   verificationTokens ContactVerification[]
+  company            Company               @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([companyId, email])
+  @@unique([companyId, phoneE164])
+  @@unique([id, companyId])
 }
 
 model CompanyMembership {
@@ -59,12 +65,14 @@ model CompanyMembership {
   userId    String           @unique
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  user    User    @relation(fields: [userId, companyId], references: [id, companyId], onDelete: Restrict, onUpdate: Restrict)
 
   sessions Session[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, companyId])
 }
 
 model Session {
@@ -142,6 +150,7 @@ model Company {
   assignments GuardAssignment[]
   memberships CompanyMembership[]
   invitations Invitation[]
+  users       User[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
