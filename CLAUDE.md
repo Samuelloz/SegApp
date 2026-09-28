@@ -17,6 +17,7 @@ SaaS para empresas de seguridad privada. Monorepo pnpm:
 - Base de datos: `docker compose up -d db`
 - Migraciones (en `apps/api`): `npx prisma migrate dev`. Prisma 7 no regenera el cliente al migrar; ejecutar después `npx prisma generate`.
 - Si una migración agrega una columna `NOT NULL` a una tabla con datos: generar con `--create-only` y editar el SQL (agregar opcional, rellenar, `SET NOT NULL`) antes de aplicarla.
+- Crear el propietario de una empresa existente (en `apps/api`): `pnpm create-owner`, con las variables `OWNER_NAME`, `OWNER_EMAIL`, `OWNER_PASSWORD` (mínimo 15 caracteres) y `OWNER_COMPANY_SLUG`.
 - Type-check del API, incluidos specs: `pnpm --filter api exec tsc --noEmit -p tsconfig.json`. No usar `npx tsc` desde la raíz: TypeScript no está instalado ahí y `npx` descarga un paquete ajeno llamado `tsc`.
 - Type-check de todo el monorepo (sin specs del API): `pnpm typecheck`
 - Tests del API: `pnpm --filter api test`, o `npx jest <ruta>` dentro de `apps/api`.
