@@ -1,12 +1,13 @@
 import { createHash } from 'node:crypto';
 
-import { Prisma } from '@prisma/client';
-import type { CreateInvitationInput } from '@segapp/contracts';
 import { Test, type TestingModule } from '@nestjs/testing';
+import { Prisma } from '@prisma/client';
 
-import { PrismaService } from '../prisma/prisma.service';
+import type { CreateInvitationInput } from '@segapp/contracts';
+
 import { PasswordService } from '../auth/password.service';
 import { ContactVerificationsService } from '../contact-verifications/contact-verifications.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { InvitationsService } from './invitations.service';
 
 describe('InvitationsService', () => {
@@ -15,7 +16,7 @@ describe('InvitationsService', () => {
   const prismaMock = {
     $transaction: jest.fn(),
     companyMembership: { findUnique: jest.fn(), create: jest.fn() },
-    user: { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn() },
+    user: { findFirst: jest.fn(), create: jest.fn() },
     invitation: {
       updateMany: jest.fn(),
       findFirst: jest.fn(),
@@ -23,7 +24,7 @@ describe('InvitationsService', () => {
       create: jest.fn(),
     },
   };
-  const passwordServiceMock = { hash: jest.fn(), verify: jest.fn() };
+  const passwordServiceMock = { hash: jest.fn() };
   const contactVerificationsServiceMock = { create: jest.fn() };
 
   const activeInviter = {
@@ -38,7 +39,7 @@ describe('InvitationsService', () => {
     jest.resetAllMocks();
 
     prismaMock.companyMembership.findUnique.mockResolvedValue(activeInviter);
-    prismaMock.user.findMany.mockResolvedValue([]);
+    prismaMock.user.findFirst.mockResolvedValue(null);
     prismaMock.invitation.updateMany.mockResolvedValue({ count: 0 });
     prismaMock.invitation.findFirst.mockResolvedValue(null);
     prismaMock.invitation.create.mockImplementation(
@@ -50,7 +51,6 @@ describe('InvitationsService', () => {
         callback(prismaMock),
     );
     passwordServiceMock.hash.mockResolvedValue('argon2-hash');
-    passwordServiceMock.verify.mockResolvedValue(true);
     contactVerificationsServiceMock.create.mockResolvedValue({
       verification: {
         id: 'verification-1',
@@ -96,12 +96,12 @@ describe('InvitationsService', () => {
         user: { select: { active: true } },
       },
     });
-    expect(prismaMock.user.findMany).toHaveBeenCalledWith({
-      where: { OR: [{ email: 'persona@ejemplo.com' }] },
-      select: {
-        id: true,
-        membership: { select: { id: true } },
+    expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
+      where: {
+        companyId: 'company-1',
+        OR: [{ email: 'persona@ejemplo.com' }],
       },
+      select: { id: true },
     });
     expect(prismaMock.invitation.create).toHaveBeenCalledWith({
       data: {
@@ -142,14 +142,12 @@ describe('InvitationsService', () => {
       roles: ['GUARD_MANAGER', 'SUPERVISOR'],
     });
 
-    expect(prismaMock.user.findMany).toHaveBeenCalledWith({
+    expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
       where: {
+        companyId: 'company-1',
         OR: [{ email: 'persona@ejemplo.com' }, { phoneE164: '+528711234567' }],
       },
-      select: {
-        id: true,
-        membership: { select: { id: true } },
-      },
+      select: { id: true },
     });
     expect(result.invitation.email).toBe('persona@ejemplo.com');
     expect(result.invitation.phoneE164).toBe('+528711234567');
@@ -249,31 +247,12 @@ describe('InvitationsService', () => {
       service.create('company-1', 'owner-1', invalidInput),
     ).rejects.toThrow();
 
-    expect(prismaMock.user.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
     expect(prismaMock.invitation.create).not.toHaveBeenCalled();
   });
 
-  it('rechaza un contacto que ya tiene membresía', async () => {
-    prismaMock.user.findMany.mockResolvedValue([
-      { id: 'user-1', membership: { id: 'membership-1' } },
-    ]);
-
-    await expect(
-      service.create('company-1', 'owner-1', {
-        email: 'persona@ejemplo.com',
-        deliveryChannel: 'EMAIL',
-        roles: ['VIEWER'],
-      }),
-    ).rejects.toThrow('ya pertenecen a una cuenta con empresa');
-
-    expect(prismaMock.invitation.create).not.toHaveBeenCalled();
-  });
-
-  it('rechaza cuando correo y teléfono coinciden con usuarios distintos', async () => {
-    prismaMock.user.findMany.mockResolvedValue([
-      { id: 'user-1', membership: null },
-      { id: 'user-2', membership: null },
-    ]);
+  it('rechaza un contacto ya registrado en la empresa', async () => {
+    prismaMock.user.findFirst.mockResolvedValue({ id: 'user-1' });
 
     await expect(
       service.create('company-1', 'owner-1', {
@@ -282,22 +261,32 @@ describe('InvitationsService', () => {
         deliveryChannel: 'WHATSAPP',
         roles: ['VIEWER'],
       }),
-    ).rejects.toThrow('ya pertenecen a una cuenta con empresa');
+    ).rejects.toThrow(
+      'Estos datos de contacto ya pertenecen a un usuario de esta empresa.',
+    );
 
     expect(prismaMock.invitation.create).not.toHaveBeenCalled();
   });
 
-  it('permite invitar a una cuenta existente sin membresía', async () => {
-    prismaMock.user.findMany.mockResolvedValue([
-      { id: 'user-1', membership: null },
-    ]);
+  it('busca contactos únicamente dentro de la empresa del invitador', async () => {
+    prismaMock.companyMembership.findUnique.mockResolvedValue({
+      ...activeInviter,
+      companyId: 'company-2',
+    });
 
-    await service.create('company-1', 'owner-1', {
+    await service.create('company-2', 'owner-2', {
       email: 'persona@ejemplo.com',
       deliveryChannel: 'EMAIL',
       roles: ['VIEWER'],
     });
 
+    expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
+      where: {
+        companyId: 'company-2',
+        OR: [{ email: 'persona@ejemplo.com' }],
+      },
+      select: { id: true },
+    });
     expect(prismaMock.invitation.create).toHaveBeenCalledTimes(1);
   });
 
@@ -497,7 +486,6 @@ describe('InvitationsService', () => {
       jest.setSystemTime(now);
       prismaMock.invitation.findUnique.mockResolvedValue(emailInvitation);
       prismaMock.invitation.updateMany.mockResolvedValue({ count: 1 });
-      prismaMock.user.findUnique.mockResolvedValue(null);
       prismaMock.user.create.mockResolvedValue({ id: 'user-1' });
       prismaMock.companyMembership.create.mockResolvedValue({
         id: 'membership-1',
@@ -525,17 +513,10 @@ describe('InvitationsService', () => {
         },
         data: { acceptedAt: now },
       });
-      expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
-        where: { email: 'persona@ejemplo.com' },
-        select: {
-          id: true,
-          passwordHash: true,
-          membership: { select: { id: true } },
-        },
-      });
       expect(passwordServiceMock.hash).toHaveBeenCalledWith(input.password);
       expect(prismaMock.user.create).toHaveBeenCalledWith({
         data: {
+          companyId: 'company-1',
           name: input.name,
           passwordHash: 'argon2-hash',
           email: 'persona@ejemplo.com',
@@ -567,7 +548,6 @@ describe('InvitationsService', () => {
         verificationToken: 'v'.repeat(43),
         verificationExpiresAt: '2026-09-22T12:00:00.000Z',
       });
-      expect(passwordServiceMock.verify).not.toHaveBeenCalled();
     });
 
     it('usa solo el teléfono si la entrega fue por WhatsApp', async () => {
@@ -578,16 +558,9 @@ describe('InvitationsService', () => {
 
       await service.accept({ ...input, phoneE164: '+528711234567' });
 
-      expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
-        where: { phoneE164: '+528711234567' },
-        select: {
-          id: true,
-          passwordHash: true,
-          membership: { select: { id: true } },
-        },
-      });
       expect(prismaMock.user.create).toHaveBeenCalledWith({
         data: {
+          companyId: 'company-1',
           name: input.name,
           passwordHash: 'argon2-hash',
           email: null,
@@ -603,68 +576,6 @@ describe('InvitationsService', () => {
           contactValue: '+528711234567',
         },
       );
-    });
-
-    it('vincula una cuenta sin empresa solo tras verificar su contraseña', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({
-        id: 'existing-user',
-        passwordHash: 'existing-hash',
-        membership: null,
-      });
-
-      await service.accept(input);
-
-      expect(passwordServiceMock.verify).toHaveBeenCalledWith(
-        'existing-hash',
-        input.password,
-      );
-      expect(prismaMock.user.create).not.toHaveBeenCalled();
-      expect(passwordServiceMock.hash).not.toHaveBeenCalled();
-      expect(prismaMock.companyMembership.create).toHaveBeenCalledWith({
-        data: {
-          userId: 'existing-user',
-          companyId: 'company-1',
-          roles: ['GUARD_MANAGER', 'SUPERVISOR'],
-          status: 'PENDING',
-        },
-        select: { id: true, status: true },
-      });
-      expect(contactVerificationsServiceMock.create).toHaveBeenCalledWith(
-        prismaMock,
-        {
-          userId: 'existing-user',
-          deliveryChannel: 'EMAIL',
-          contactValue: 'persona@ejemplo.com',
-        },
-      );
-    });
-
-    it('rechaza una contraseña incorrecta sin crear la membresía', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({
-        id: 'existing-user',
-        passwordHash: 'existing-hash',
-        membership: null,
-      });
-      passwordServiceMock.verify.mockResolvedValue(false);
-
-      await expect(service.accept(input)).rejects.toThrow(
-        'No fue posible vincular la cuenta existente.',
-      );
-      expect(prismaMock.companyMembership.create).not.toHaveBeenCalled();
-    });
-
-    it('rechaza una cuenta que ya tiene empresa', async () => {
-      prismaMock.user.findUnique.mockResolvedValue({
-        id: 'existing-user',
-        passwordHash: 'existing-hash',
-        membership: { id: 'membership-existing' },
-      });
-
-      await expect(service.accept(input)).rejects.toThrow(
-        'Esta cuenta ya pertenece a una empresa.',
-      );
-      expect(passwordServiceMock.verify).not.toHaveBeenCalled();
-      expect(prismaMock.companyMembership.create).not.toHaveBeenCalled();
     });
 
     it.each([
@@ -751,16 +662,17 @@ describe('InvitationsService', () => {
       expect(prismaMock.companyMembership.create).toHaveBeenCalledTimes(1);
     });
 
-    it('convierte un conflicto de unicidad en conflicto de contacto', async () => {
+    it('rechaza un contacto ya registrado en la empresa de la invitación', async () => {
       prismaMock.user.create.mockRejectedValue(
         new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
           code: 'P2002',
           clientVersion: '7.2.0',
+          meta: { target: ['companyId', 'email'] },
         }),
       );
 
       await expect(service.accept(input)).rejects.toThrow(
-        'Estos datos de contacto ya pertenecen a otra cuenta.',
+        'Estos datos de contacto ya pertenecen a un usuario de esta empresa.',
       );
       expect(prismaMock.companyMembership.create).not.toHaveBeenCalled();
     });

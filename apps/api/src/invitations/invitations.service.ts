@@ -1,21 +1,23 @@
-import { Prisma, type Invitation } from '@prisma/client';
-import {
-  createInvitationSchema,
-  type CreateInvitationInput,
-  AcceptInvitationInput,
-  acceptInvitationSchema,
-} from '@segapp/contracts';
+import { createHash, randomBytes } from 'node:crypto';
+
 import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { createHash, randomBytes } from 'node:crypto';
+import { Prisma, type Invitation } from '@prisma/client';
 
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  acceptInvitationSchema,
+  createInvitationSchema,
+  type AcceptInvitationInput,
+  type CreateInvitationInput,
+} from '@segapp/contracts';
+
 import { PasswordService } from '../auth/password.service';
 import { ContactVerificationsService } from '../contact-verifications/contact-verifications.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 const INVITATION_DURATION_MS = 48 * 60 * 60 * 1000;
 
@@ -73,20 +75,14 @@ export class InvitationsService {
       ...(phoneE164 ? [{ phoneE164 }] : []),
     ];
 
-    const matchingUsers = await this.prisma.user.findMany({
-      where: { OR: matchingContacts },
-      select: {
-        id: true,
-        membership: { select: { id: true } },
-      },
+    const existingUser = await this.prisma.user.findFirst({
+      where: { companyId, OR: matchingContacts },
+      select: { id: true },
     });
 
-    if (
-      matchingUsers.length > 1 ||
-      matchingUsers.some((user) => user.membership !== null)
-    ) {
+    if (existingUser) {
       throw new ConflictException(
-        'Estos datos de contacto ya pertenecen a una cuenta con empresa.',
+        'Estos datos de contacto ya pertenecen a un usuario de esta empresa.',
       );
     }
 
@@ -250,67 +246,24 @@ export class InvitationsService {
           throw new BadRequestException(invalidInvitationMessage);
         }
 
-        const userSelect = {
-          id: true,
-          passwordHash: true,
-          membership: { select: { id: true } },
-        } as const;
+        const passwordHash = await this.passwordService.hash(password);
 
-        let contactWhere: Prisma.UserWhereUniqueInput;
-
-        if (deliveryEmail) {
-          contactWhere = { email: deliveryEmail };
-        } else if (deliveryPhone) {
-          contactWhere = { phoneE164: deliveryPhone };
-        } else {
-          throw new BadRequestException(invalidInvitationMessage);
-        }
-
-        const existingUser = await tx.user.findUnique({
-          where: contactWhere,
-          select: userSelect,
+        // El índice único (companyId, contacto) rechaza contactos ya
+        // registrados en la empresa; el catch lo convierte en 409.
+        const user = await tx.user.create({
+          data: {
+            companyId: invitation.companyId,
+            name,
+            passwordHash,
+            email: deliveryEmail,
+            phoneE164: deliveryPhone,
+          },
+          select: { id: true },
         });
-
-        let userId: string;
-
-        if (existingUser) {
-          if (existingUser.membership) {
-            throw new ConflictException(
-              'Esta cuenta ya pertenece a una empresa.',
-            );
-          }
-
-          const passwordMatches = await this.passwordService.verify(
-            existingUser.passwordHash,
-            password,
-          );
-
-          if (!passwordMatches) {
-            throw new ForbiddenException(
-              'No fue posible vincular la cuenta existente.',
-            );
-          }
-
-          userId = existingUser.id;
-        } else {
-          const passwordHash = await this.passwordService.hash(password);
-
-          const user = await tx.user.create({
-            data: {
-              name,
-              passwordHash,
-              email: deliveryEmail,
-              phoneE164: deliveryPhone,
-            },
-            select: { id: true },
-          });
-
-          userId = user.id;
-        }
 
         const membership = await tx.companyMembership.create({
           data: {
-            userId,
+            userId: user.id,
             companyId: invitation.companyId,
             roles: invitation.roles,
             status: 'PENDING',
@@ -326,7 +279,7 @@ export class InvitationsService {
 
         const { verification, token: verificationToken } =
           await this.contactVerificationsService.create(tx, {
-            userId,
+            userId: user.id,
             deliveryChannel: invitation.deliveryChannel,
             contactValue,
           });
@@ -345,7 +298,7 @@ export class InvitationsService {
         error.code === 'P2002'
       ) {
         throw new ConflictException(
-          'Estos datos de contacto ya pertenecen a otra cuenta.',
+          'Estos datos de contacto ya pertenecen a un usuario de esta empresa.',
         );
       }
 
