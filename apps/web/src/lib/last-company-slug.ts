@@ -17,3 +17,11 @@ export function saveLastCompanySlug(companySlug: string): void {
     // Sin almacenamiento, el usuario solo tendrá que indicar su empresa.
   }
 }
+
+export function clearLastCompanySlug(): void {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Sin almacenamiento no hay nada que olvidar.
+  }
+}

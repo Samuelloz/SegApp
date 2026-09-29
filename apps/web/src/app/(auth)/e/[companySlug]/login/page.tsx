@@ -16,7 +16,10 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import InternationalPhoneField from '@/components/ui/InternationalPhoneField';
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
-import { saveLastCompanySlug } from '@/lib/last-company-slug';
+import {
+  clearLastCompanySlug,
+  saveLastCompanySlug,
+} from '@/lib/last-company-slug';
 import { isValidE164PhoneNumber } from '@/lib/phone-number';
 import { useGetCurrentSessionQuery, useLoginMutation } from '@/store/api';
 
@@ -102,6 +105,11 @@ export default function LoginPage() {
     clearErrors('identifier');
   }
 
+  function changeCompany(): void {
+    clearLastCompanySlug();
+    router.push('/login');
+  }
+
   if (isCheckingSession || session) {
     return (
       <main className={styles.page}>
@@ -139,6 +147,18 @@ export default function LoginPage() {
           <p className={styles.description}>
             Accede al panel operativo de tu empresa.
           </p>
+
+          <p className={styles.company}>
+            Empresa: <strong>{companySlug}</strong>
+          </p>
+
+          <button
+            className={styles.changeCompany}
+            type="button"
+            onClick={changeCompany}
+          >
+            ¿No es tu empresa? Cambiar de empresa
+          </button>
         </div>
 
         <form
