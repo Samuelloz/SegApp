@@ -277,11 +277,6 @@ export default function InvitationPage() {
             )}
           </div>
 
-          <p className={styles.help}>
-            Si ya tienes una cuenta con este correo o teléfono, escribe la
-            contraseña de esa cuenta.
-          </p>
-
           <Button
             className={styles.submit}
             type="submit"
