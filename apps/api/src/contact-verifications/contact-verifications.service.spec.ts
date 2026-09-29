@@ -142,6 +142,7 @@ describe('ContactVerificationsService', () => {
           status: 'PENDING',
           company: {
             name: 'LozCorp',
+            slug: 'lozcorp',
             active: true,
             deletedAt: null,
           },
@@ -201,9 +202,10 @@ describe('ContactVerificationsService', () => {
         where: { id: 'user-1' },
         data: { emailVerifiedAt: now },
       });
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         membershipId: 'membership-1',
         companyName: 'LozCorp',
+        companySlug: 'lozcorp',
         status: 'ACTIVE',
         deliveryChannel: 'EMAIL',
       });
