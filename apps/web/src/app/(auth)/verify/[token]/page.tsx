@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import Button from '@/components/ui/Button';
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import { saveLastCompanySlug } from '@/lib/last-company-slug';
 import { useVerifyContactMutation } from '@/store/api';
 
 import styles from '../../invite/[token]/invite.module.css';
@@ -13,7 +14,9 @@ import styles from '../../invite/[token]/invite.module.css';
 export default function ContactVerificationPage() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
-  const [verified, setVerified] = useState(false);
+  const [verifiedCompanySlug, setVerifiedCompanySlug] = useState<string | null>(
+    null,
+  );
 
   const [verifyContact, { isLoading }] = useVerifyContactMutation();
 
@@ -21,9 +24,10 @@ export default function ContactVerificationPage() {
     const toastId = toast.loading('Verificando contacto...');
 
     try {
-      await verifyContact({ token }).unwrap();
+      const { companySlug } = await verifyContact({ token }).unwrap();
 
-      setVerified(true);
+      saveLastCompanySlug(companySlug);
+      setVerifiedCompanySlug(companySlug);
 
       toast.success('Tu contacto fue verificado correctamente.', {
         id: toastId,
@@ -38,7 +42,7 @@ export default function ContactVerificationPage() {
     }
   }
 
-  if (verified) {
+  if (verifiedCompanySlug) {
     return (
       <main className={styles.page}>
         <section className={styles.card} aria-labelledby="verification-title">
@@ -60,7 +64,7 @@ export default function ContactVerificationPage() {
           <Button
             className={styles.submit}
             type="button"
-            onClick={() => router.push('/login')}
+            onClick={() => router.push(`/e/${verifiedCompanySlug}/login`)}
           >
             Ir a iniciar sesión
           </Button>
