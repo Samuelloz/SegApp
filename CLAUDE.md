@@ -33,6 +33,7 @@ SaaS para empresas de seguridad privada. Monorepo pnpm:
 
   Usar `import type` o `type X` en los imports que solo aportan tipos.
 
+- Separar código por responsabilidad o cuando se reutiliza; no crear abstracciones de un solo uso. Los schemas de formularios de web van en `<nombre>.schema.ts` junto a su página.
 - Controladores del API: validan el body con el schema de `@segapp/contracts` (`safeParse`) y responden `BadRequestException` con el primer issue.
 - Multi-tenancy: el `companyId` sale siempre de la sesión (`@CurrentCompanyId()`), nunca del cliente. Los endpoints protegidos usan `@UseGuards(SessionAuthGuard, RolesGuard)` con `@Roles(...rolesFor('<permiso>'))`, y los permisos se definen en `packages/contracts/src/permissions.ts`.
 - Los textos visibles para el usuario van en español.
