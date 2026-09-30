@@ -162,6 +162,30 @@ describe('AuthService', () => {
       expect(passwordServiceMock.verify).toHaveBeenCalledTimes(2);
     });
 
+    it('precalcula el hash ficticio al iniciar el módulo', async () => {
+      await service.onModuleInit();
+
+      expect(passwordServiceMock.hash).toHaveBeenCalledTimes(1);
+
+      prismaMock.user.findFirst.mockResolvedValue(null);
+      passwordServiceMock.verify.mockResolvedValue(false);
+
+      await expect(
+        service.authenticateCredentials(
+          'seguridad-del-norte',
+          'inexistente@segapp.test',
+          'una contraseña segura',
+        ),
+      ).rejects.toThrow('Datos de acceso incorrectos.');
+
+      // El primer login fallido solo verifica: no vuelve a generar el hash.
+      expect(passwordServiceMock.hash).toHaveBeenCalledTimes(1);
+      expect(passwordServiceMock.verify).toHaveBeenCalledWith(
+        'hash-ficticio',
+        'una contraseña segura',
+      );
+    });
+
     it('rechaza un usuario inactivo después de verificar la contraseña', async () => {
       prismaMock.user.findFirst.mockResolvedValue({
         ...activeUser,

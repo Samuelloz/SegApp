@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import {
   ForbiddenException,
   Injectable,
+  type OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Company, CompanyMembership, User } from '@prisma/client';
@@ -20,7 +21,7 @@ type MembershipWithCompany = CompanyMembership & {
 };
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private dummyPasswordHash?: Promise<string>;
 
   constructor(
@@ -28,6 +29,12 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly sessionService: SessionService,
   ) {}
+
+  // Calcularlo al arrancar: si se calculara en el primer login fallido, esa
+  // respuesta tardaría el doble y delataría que la cuenta no existe.
+  async onModuleInit(): Promise<void> {
+    await this.getDummyPasswordHash();
+  }
 
   // Hash con los mismos parámetros que los reales, para que verificar
   // contra él tarde lo mismo que verificar contra un usuario existente.
