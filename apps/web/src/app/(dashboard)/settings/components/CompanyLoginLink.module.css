@@ -1,0 +1,17 @@
+.card {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 24px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.linkRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}

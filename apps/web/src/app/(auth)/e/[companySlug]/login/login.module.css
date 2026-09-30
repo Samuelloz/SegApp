@@ -63,6 +63,16 @@
   line-height: 1.5;
 }
 
+.company {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.company strong {
+  color: var(--text);
+}
+
 .form {
   display: grid;
   gap: 18px;
@@ -141,6 +151,22 @@
 .submitButton {
   width: 100%;
   margin-top: 4px;
+}
+
+.changeCompany {
+  display: block;
+  margin: 8px auto 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.changeCompany:hover {
+  text-decoration: underline;
 }
 
 .footer {

@@ -1,25 +1,27 @@
 'use client';
 
-import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-
-import {
-  useGetCurrentCompanyQuery,
-  useGetCurrentSessionQuery,
-  useUpdateCurrentCompanyMutation,
-} from '@/store/api';
 import {
   companySettingsSchema,
   hasPermission,
   type CompanyFormValues,
 } from '@segapp/contracts';
-import styles from './settings.module.css';
+
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import {
+  useGetCurrentCompanyQuery,
+  useGetCurrentSessionQuery,
+  useUpdateCurrentCompanyMutation,
+} from '@/store/api';
+
+import CompanyLoginLink from './components/CompanyLoginLink';
+import styles from './settings.module.css';
 
 export default function SettingsPage() {
   const { data: session } = useGetCurrentSessionQuery();
@@ -267,6 +269,8 @@ export default function SettingsPage() {
           )}
         </form>
       </section>
+
+      <CompanyLoginLink companySlug={company.slug} />
     </>
   );
 }

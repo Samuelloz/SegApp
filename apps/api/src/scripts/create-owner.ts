@@ -1,12 +1,13 @@
 import 'dotenv/config';
 
+import { NestFactory } from '@nestjs/core';
+
 import {
+  companySlugSchema,
   userEmailSchema,
   userNameSchema,
   userPasswordSchema,
 } from '@segapp/contracts';
-
-import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from '../app.module';
 import { PasswordService } from '../auth/password.service';
@@ -55,15 +56,22 @@ function getOwnerConfiguration() {
     );
   }
 
-  const companySlug = getRequiredEnvironmentVariable('OWNER_COMPANY_SLUG')
-    .trim()
-    .toLowerCase();
+  const companySlugResult = companySlugSchema.safeParse(
+    getRequiredEnvironmentVariable('OWNER_COMPANY_SLUG'),
+  );
+
+  if (!companySlugResult.success) {
+    throw new Error(
+      companySlugResult.error.issues[0]?.message ??
+        'El slug de la empresa no es válido.',
+    );
+  }
 
   return {
     name: nameResult.data,
     email: emailResult.data,
     password: passwordResult.data,
-    companySlug,
+    companySlug: companySlugResult.data,
   };
 }
 
@@ -98,7 +106,10 @@ async function createOwner(): Promise<void> {
 
     const existingUser = await prisma.user.findUnique({
       where: {
-        email: configuration.email,
+        companyId_email: {
+          companyId: company.id,
+          email: configuration.email,
+        },
       },
       select: {
         id: true,
@@ -107,7 +118,7 @@ async function createOwner(): Promise<void> {
 
     if (existingUser) {
       throw new Error(
-        `Ya existe un usuario con el correo ${configuration.email}.`,
+        `Ya existe un usuario con el correo ${configuration.email} en ${company.name}.`,
       );
     }
 
@@ -131,13 +142,13 @@ async function createOwner(): Promise<void> {
 
     const owner = await prisma.user.create({
       data: {
+        companyId: company.id,
         name: configuration.name,
         email: configuration.email,
         passwordHash,
         emailVerifiedAt: new Date(),
         membership: {
           create: {
-            companyId: company.id,
             roles: ['OWNER'],
             status: 'ACTIVE',
           },

@@ -132,10 +132,40 @@ describe('Datos de contacto', () => {
   });
 });
 
+describe('Empresa de inicio de sesión', () => {
+  it('normaliza el slug de la empresa', () => {
+    expect(
+      loginSchema.parse({
+        companySlug: ' Seguridad-Del-Norte ',
+        identifier: 'usuario@segapp.test',
+        password: 'una contraseña segura',
+      }).companySlug,
+    ).toBe('seguridad-del-norte');
+  });
+
+  it.each([
+    ['vacío', ''],
+    ['con espacios internos', 'seguridad del norte'],
+    ['que empieza con guion', '-seguridad'],
+    ['que termina con guion', 'seguridad-'],
+    ['con caracteres no permitidos', 'seguridad_norte'],
+    ['de más de 63 caracteres', 'a'.repeat(64)],
+  ])('rechaza un slug %s', (_case, companySlug) => {
+    expect(
+      loginSchema.safeParse({
+        companySlug,
+        identifier: 'usuario@segapp.test',
+        password: 'una contraseña segura',
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe('Identificador de inicio de sesión', () => {
   it('normaliza un correo electrónico', () => {
     expect(
       loginSchema.parse({
+        companySlug: 'seguridad-del-norte',
         identifier: ' USUARIO@SEGAPP.TEST ',
         password: 'una contraseña segura',
       }).identifier,
@@ -145,6 +175,7 @@ describe('Identificador de inicio de sesión', () => {
   it('acepta un teléfono en formato internacional', () => {
     expect(
       loginSchema.parse({
+        companySlug: 'seguridad-del-norte',
         identifier: ' +528711234567 ',
         password: 'una contraseña segura',
       }).identifier,
@@ -153,6 +184,7 @@ describe('Identificador de inicio de sesión', () => {
 
   it('rechaza un teléfono sin prefijo internacional', () => {
     const result = loginSchema.safeParse({
+      companySlug: 'seguridad-del-norte',
       identifier: '8711234567',
       password: 'una contraseña segura',
     });

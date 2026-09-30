@@ -1,120 +1,82 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema, type LoginInput } from '@segapp/contracts';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { useEffect, useSyncExternalStore } from 'react';
+import { useForm } from 'react-hook-form';
+
+import { companySlugSchema } from '@segapp/contracts';
 
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import InternationalPhoneField from '@/components/ui/InternationalPhoneField';
-import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
-import { isValidE164PhoneNumber } from '@/lib/phone-number';
-import { useGetCurrentSessionQuery, useLoginMutation } from '@/store/api';
+import { getLastCompanySlug } from '@/lib/last-company-slug';
 
-import styles from './login.module.css';
+import {
+  companyLoginSchema,
+  type CompanyLoginValues,
+} from './company-login.schema';
+import styles from '../e/[companySlug]/login/login.module.css';
 
-export default function LoginPage() {
+// localStorage no emite cambios que necesitemos escuchar en esta página.
+function subscribe(): () => void {
+  return () => {};
+}
+
+export default function CompanyLoginPage() {
   const router = useRouter();
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
 
-  const { data: session, isLoading: isCheckingSession } =
-    useGetCurrentSessionQuery(undefined, {
-      refetchOnMountOrArgChange: true,
-    });
+  // undefined en el servidor: todavía no sabemos si hay una empresa guardada.
+  const storedCompanySlug = useSyncExternalStore(
+    subscribe,
+    getLastCompanySlug,
+    () => undefined,
+  );
 
-  const [login, { isLoading }] = useLoginMutation();
+  const storedSlugResult = companySlugSchema.safeParse(storedCompanySlug);
 
   const {
-    clearErrors,
-    control,
     register,
     handleSubmit,
-    setError,
-    setValue,
     formState: { errors },
-  } = useForm<LoginInput>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      identifier: '',
-      password: '',
-    },
+  } = useForm<CompanyLoginValues>({
+    resolver: zodResolver(companyLoginSchema),
+    defaultValues: { companySlug: '' },
   });
 
   useEffect(() => {
-    if (session) {
-      router.replace('/');
+    if (storedSlugResult.success) {
+      router.replace(`/e/${storedSlugResult.data}/login`);
     }
-  }, [router, session]);
+  }, [router, storedSlugResult.success, storedSlugResult.data]);
 
-  async function onSubmit(values: LoginInput): Promise<void> {
-    if (loginMethod === 'phone' && !isValidE164PhoneNumber(values.identifier)) {
-      setError('identifier', {
-        type: 'validate',
-        message: 'Ingresa un número válido para el país seleccionado.',
-      });
-      return;
-    }
-
-    const toastId = toast.loading('Iniciando sesión...');
-
-    try {
-      await login(values).unwrap();
-
-      toast.success('Sesión iniciada correctamente.', {
-        id: toastId,
-      });
-
-      router.replace('/');
-      router.refresh();
-    } catch (error: unknown) {
-      toast.error(getApiErrorMessage(error, 'No fue posible iniciar sesión.'), {
-        id: toastId,
-      });
-    }
+  function onSubmit(values: CompanyLoginValues): void {
+    router.push(`/e/${values.companySlug}/login`);
   }
 
-  function changeLoginMethod(nextMethod: 'email' | 'phone'): void {
-    if (nextMethod === loginMethod) {
-      return;
-    }
-
-    setLoginMethod(nextMethod);
-    setValue('identifier', '', {
-      shouldDirty: false,
-      shouldTouch: false,
-      shouldValidate: false,
-    });
-    clearErrors('identifier');
-  }
-
-  if (isCheckingSession || session) {
+  if (storedCompanySlug === undefined || storedSlugResult.success) {
     return (
       <main className={styles.page}>
-        <p className={styles.status}>
-          {session ? 'Redirigiendo al panel...' : 'Verificando sesión...'}
-        </p>
+        <p className={styles.status}>Abriendo el inicio de sesión...</p>
       </main>
     );
   }
 
   return (
     <main className={styles.page}>
-      <section className={styles.card} aria-labelledby="login-title">
+      <section className={styles.card} aria-labelledby="company-login-title">
         <div className={styles.brand}>
           <span className={styles.logo} aria-hidden="true" />
           <span className={styles.brandName}>SegApp</span>
         </div>
 
         <div className={styles.header}>
-          <h1 id="login-title" className={styles.title}>
+          <h1 id="company-login-title" className={styles.title}>
             Iniciar sesión
           </h1>
 
           <p className={styles.description}>
-            Accede al panel operativo de tu empresa.
+            Indica el identificador de tu empresa. Aparece en el enlace de
+            acceso que te compartió tu administrador.
           </p>
         </div>
 
@@ -123,117 +85,39 @@ export default function LoginPage() {
           onSubmit={handleSubmit(onSubmit)}
           noValidate
         >
-          <fieldset className={styles.methodFieldset}>
-            <legend className={styles.label}>Iniciar sesión con</legend>
-
-            <div className={styles.methodOptions}>
-              <button
-                className={styles.methodButton}
-                data-active={loginMethod === 'email'}
-                type="button"
-                aria-pressed={loginMethod === 'email'}
-                onClick={() => changeLoginMethod('email')}
-              >
-                Correo electrónico
-              </button>
-
-              <button
-                className={styles.methodButton}
-                data-active={loginMethod === 'phone'}
-                type="button"
-                aria-pressed={loginMethod === 'phone'}
-                onClick={() => changeLoginMethod('phone')}
-              >
-                Teléfono
-              </button>
-            </div>
-          </fieldset>
-
-          {loginMethod === 'email' ? (
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="login-identifier">
-                Correo electrónico
-              </label>
-
-              <Input
-                id="login-identifier"
-                type="email"
-                autoComplete="username"
-                autoFocus
-                placeholder="nombre@empresa.com"
-                {...register('identifier')}
-                aria-invalid={Boolean(errors.identifier)}
-                aria-describedby={
-                  errors.identifier ? 'login-identifier-error' : undefined
-                }
-              />
-
-              {errors.identifier && (
-                <p
-                  id="login-identifier-error"
-                  className={styles.fieldError}
-                  role="alert"
-                >
-                  {errors.identifier.message}
-                </p>
-              )}
-            </div>
-          ) : (
-            <Controller
-              control={control}
-              name="identifier"
-              render={({ field }) => (
-                <InternationalPhoneField
-                  inputId="login-identifier"
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  error={errors.identifier?.message}
-                />
-              )}
-            />
-          )}
-
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="login-password">
-              Contraseña
+            <label className={styles.label} htmlFor="company-slug">
+              Identificador de la empresa
             </label>
 
             <Input
-              id="login-password"
-              type="password"
-              autoComplete="current-password"
-              placeholder="Ingresa tu contraseña"
-              {...register('password')}
-              aria-invalid={Boolean(errors.password)}
+              id="company-slug"
+              type="text"
+              autoComplete="organization"
+              autoFocus
+              placeholder="mi-empresa"
+              {...register('companySlug')}
+              aria-invalid={Boolean(errors.companySlug)}
               aria-describedby={
-                errors.password ? 'login-password-error' : undefined
+                errors.companySlug ? 'company-slug-error' : undefined
               }
             />
 
-            {errors.password && (
+            {errors.companySlug && (
               <p
-                id="login-password-error"
+                id="company-slug-error"
                 className={styles.fieldError}
                 role="alert"
               >
-                {errors.password.message}
+                {errors.companySlug.message}
               </p>
             )}
           </div>
 
-          <Button
-            className={styles.submitButton}
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+          <Button className={styles.submitButton} type="submit">
+            Continuar
           </Button>
         </form>
-
-        <p className={styles.footer}>
-          Acceso exclusivo para usuarios autorizados.
-        </p>
       </section>
     </main>
   );

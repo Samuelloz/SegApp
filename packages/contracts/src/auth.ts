@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { companySlugSchema } from './company';
+
 export const userNameSchema = z
   .string()
   .trim()
@@ -43,6 +45,7 @@ export const contactVerificationTokenSchema = z
   .regex(/^[A-Za-z0-9_-]{43}$/, 'El token de verificación no es válido.');
 
 export const loginSchema = z.object({
+  companySlug: companySlugSchema,
   identifier: z.union([userEmailSchema, userPhoneE164Schema], {
     error: 'Ingresa un correo electrónico o teléfono válido.',
   }),

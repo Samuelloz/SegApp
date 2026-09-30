@@ -1,11 +1,14 @@
-import type { Company, CompanyMembership, User } from '@prisma/client';
-import type { CurrentSessionResponse, LoginInput } from '@segapp/contracts';
+import { randomBytes } from 'node:crypto';
 
 import {
   ForbiddenException,
   Injectable,
+  type OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
+import type { Company, CompanyMembership, User } from '@prisma/client';
+
+import type { CurrentSessionResponse, LoginInput } from '@segapp/contracts';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from './password.service';
@@ -18,21 +21,44 @@ type MembershipWithCompany = CompanyMembership & {
 };
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
+  private dummyPasswordHash?: Promise<string>;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
     private readonly sessionService: SessionService,
   ) {}
 
-  async authenticateCredentials(identifier: string, password: string) {
+  // Calcularlo al arrancar: si se calculara en el primer login fallido, esa
+  // respuesta tardaría el doble y delataría que la cuenta no existe.
+  async onModuleInit(): Promise<void> {
+    await this.getDummyPasswordHash();
+  }
+
+  // Hash con los mismos parámetros que los reales, para que verificar
+  // contra él tarde lo mismo que verificar contra un usuario existente.
+  private getDummyPasswordHash(): Promise<string> {
+    this.dummyPasswordHash ??= this.passwordService.hash(
+      randomBytes(32).toString('base64url'),
+    );
+
+    return this.dummyPasswordHash;
+  }
+
+  async authenticateCredentials(
+    companySlug: string,
+    identifier: string,
+    password: string,
+  ) {
     const normalizedIdentifier = identifier.trim();
-    const where = normalizedIdentifier.startsWith('+')
+    const contact = normalizedIdentifier.startsWith('+')
       ? { phoneE164: normalizedIdentifier }
       : { email: normalizedIdentifier.toLowerCase() };
 
-    const user = await this.prisma.user.findUnique({
-      where,
+    // (companyId, contacto) es único: como máximo hay un resultado.
+    const user = await this.prisma.user.findFirst({
+      where: { ...contact, company: { slug: companySlug } },
       include: {
         membership: {
           include: {
@@ -42,21 +68,20 @@ export class AuthService {
       },
     });
 
-    if (!user || !user.active) {
-      throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
-    }
-
+    // Verificar siempre un hash, exista o no la cuenta, para que el tiempo
+    // de respuesta no revele qué empresas o usuarios existen.
     const passwordMatches = await this.passwordService.verify(
-      user.passwordHash,
+      user?.passwordHash ?? (await this.getDummyPasswordHash()),
       password,
     );
 
-    if (!passwordMatches) {
+    if (!user || !user.active || !passwordMatches) {
       throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
     }
 
     return {
       id: user.id,
+      companyId: user.companyId,
       email: user.email,
       phoneE164: user.phoneE164,
       name: user.name,
@@ -104,6 +129,7 @@ export class AuthService {
 
   async login(input: LoginInput) {
     const authenticatedUser = await this.authenticateCredentials(
+      input.companySlug,
       input.identifier,
       input.password,
     );

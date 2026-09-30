@@ -86,6 +86,7 @@ export class ContactVerificationsService {
                   company: {
                     select: {
                       name: true,
+                      slug: true,
                       active: true,
                       deletedAt: true,
                     },
@@ -164,6 +165,7 @@ export class ContactVerificationsService {
       return {
         membershipId: membership.id,
         companyName: membership.company.name,
+        companySlug: membership.company.slug,
         status: 'ACTIVE' as const,
         deliveryChannel: verification.deliveryChannel,
       };
