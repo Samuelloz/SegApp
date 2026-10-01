@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import Select from 'react-select';
 import { toast } from 'sonner';
 
@@ -66,7 +66,6 @@ export default function InvitationPage() {
     control,
     register,
     handleSubmit,
-    watch,
     reset,
     setValue,
     unregister,
@@ -82,7 +81,7 @@ export default function InvitationPage() {
     },
   });
 
-  const deliveryChannel = watch('deliveryChannel');
+  const deliveryChannel = useWatch({ control, name: 'deliveryChannel' });
 
   const invitationUrl =
     createdInvitation && typeof window !== 'undefined'
