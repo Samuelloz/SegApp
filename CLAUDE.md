@@ -22,16 +22,20 @@ SaaS para empresas de seguridad privada. Monorepo pnpm:
 - Type-check de todo el monorepo (sin specs del API): `pnpm typecheck`
 - Tests del API: `pnpm --filter api test`, o `npx jest <ruta>` dentro de `apps/api`.
 - Tests de web: `pnpm --filter web test` (`node --test`, archivos `*.test.mjs`).
+- Lint de api y web (solo revisa): `pnpm lint`. Corregir lo automático, incluido el orden de imports, y formatear: `pnpm lint:fix`.
+- Formato: `pnpm format` y `pnpm format:check`.
 
 ## Convenciones
 
-- Orden de imports, grupos separados por una línea en blanco:
-  1. Módulos de Node (`node:*`) y paquetes externos, en orden alfabético.
-  2. Paquetes del workspace (`@segapp/contracts`).
-  3. Alias de la app (`@/...`), solo en web.
-  4. Imports relativos: primero `../` y luego `./`, en orden alfabético. En web, los estilos al final.
+- Orden de imports: lo aplica ESLint con `eslint-plugin-simple-import-sort` (grupos en `eslint.import-groups.mjs`); `pnpm lint:fix` lo corrige. Grupos separados por una línea en blanco:
+  1. Imports que solo ejecutan algo (`import 'dotenv/config'`, CSS globales), en su orden original.
+  2. Módulos de Node (`node:*`) y paquetes externos.
+  3. Paquetes del workspace (`@segapp/contracts`).
+  4. Alias de la app (`@/...`), solo en web.
+  5. Imports relativos: primero `../` y luego `./`.
+  6. Estilos importados con nombre (`*.module.css`).
 
-  Usar `import type` o `type X` en los imports que solo aportan tipos.
+  Dentro de cada grupo, orden alfabético. Usar `import type` o `type X` en los imports que solo aportan tipos.
 
 - Separar código por responsabilidad o cuando se reutiliza; no crear abstracciones de un solo uso. Los schemas de formularios de web van en `<nombre>.schema.ts` junto a su página.
 - Controladores del API: validan el body con el schema de `@segapp/contracts` (`safeParse`) y responden `BadRequestException` con el primer issue.
