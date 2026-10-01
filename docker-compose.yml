@@ -9,7 +9,7 @@ services:
     volumes:
       - segapp_pg:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
 volumes:
   segapp_pg:

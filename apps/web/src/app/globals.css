@@ -1,8 +1,8 @@
 :root {
   --bg: #0b1220;
-  --panel: rgba(255, 255, 255, .04);
-  --panel2: rgba(0, 0, 0, .25);
-  --line: rgba(255, 255, 255, .10);
+  --panel: rgba(255, 255, 255, 0.04);
+  --panel2: rgba(0, 0, 0, 0.25);
+  --line: rgba(255, 255, 255, 0.1);
   --text: #eaf1ff;
   --muted: #9bb0d1;
   --brand: #4f7cff;
@@ -12,7 +12,7 @@
 
   --r12: 12px;
   --r16: 16px;
-  --shadow: 0 12px 30px rgba(0, 0, 0, .35);
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -29,18 +29,28 @@ body {
   min-height: 100vh;
   overflow-x: clip;
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
   background:
-    radial-gradient(1200px 600px at 15% -10%,
-      rgba(79, 124, 255, .35),
-      transparent 60%),
-    radial-gradient(900px 500px at 110% 0%,
-      rgba(39, 209, 127, .18),
-      transparent 60%),
+    radial-gradient(
+      1200px 600px at 15% -10%,
+      rgba(79, 124, 255, 0.35),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 110% 0%,
+      rgba(39, 209, 127, 0.18),
+      transparent 60%
+    ),
     linear-gradient(180deg, #060912, var(--bg));
   background-repeat: no-repeat;
   background-attachment: fixed;
-  color: var(--text)
+  color: var(--text);
 }
 
 a {
@@ -73,7 +83,7 @@ input {
 .h1 {
   margin: 0;
   font-size: 26px;
-  letter-spacing: .2px;
+  letter-spacing: 0.2px;
 }
 
 .pMuted {

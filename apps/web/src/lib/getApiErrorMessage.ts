@@ -1,7 +1,4 @@
-export function getApiErrorMessage(
-  error: unknown,
-  fallback: string
-): string {
+export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (typeof error !== 'object' || error === null || !('data' in error)) {
     return fallback;
   }
