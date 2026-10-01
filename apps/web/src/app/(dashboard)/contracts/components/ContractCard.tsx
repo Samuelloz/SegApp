@@ -1,8 +1,8 @@
 import type { Contract } from '@segapp/contracts';
 
-import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 
 import { formatContractDate } from '../contract.utils';
 

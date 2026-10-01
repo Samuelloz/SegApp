@@ -4,8 +4,8 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-
 import type { Request } from 'express';
+
 import { INVALID_SESSION_MESSAGE, SESSION_COOKIE_NAME } from './auth.constants';
 import { SessionService } from './session.service';
 

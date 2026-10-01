@@ -1,4 +1,3 @@
-import type { MembershipRole } from '@segapp/contracts';
 import {
   CanActivate,
   ExecutionContext,
@@ -7,6 +6,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+
+import type { MembershipRole } from '@segapp/contracts';
 
 import {
   INSUFFICIENT_PERMISSIONS_MESSAGE,

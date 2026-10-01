@@ -6,9 +6,9 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import {
+  type CompanyFormValues,
   companySettingsSchema,
   hasPermission,
-  type CompanyFormValues,
 } from '@segapp/contracts';
 
 import Button from '@/components/ui/Button';
@@ -21,6 +21,7 @@ import {
 } from '@/store/api';
 
 import CompanyLoginLink from './components/CompanyLoginLink';
+
 import styles from './settings.module.css';
 
 export default function SettingsPage() {

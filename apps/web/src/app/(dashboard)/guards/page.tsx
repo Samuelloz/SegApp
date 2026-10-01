@@ -4,30 +4,28 @@ import { type ChangeEvent, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
-  hasPermission,
   type Guard,
   type GuardFormValues,
+  hasPermission,
 } from '@segapp/contracts';
-
-import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
-import {
-  useGetGuardsQuery,
-  useGetGuardListQuery,
-  useGetCurrentSessionQuery,
-  useCreateGuardMutation,
-  useUpdateGuardMutation,
-  useUpdateGuardStatusMutation,
-} from '@/store/api';
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import {
+  useCreateGuardMutation,
+  useGetCurrentSessionQuery,
+  useGetGuardListQuery,
+  useGetGuardsQuery,
+  useUpdateGuardMutation,
+  useUpdateGuardStatusMutation,
+} from '@/store/api';
 
 import GuardCard from './components/GuardCard';
 import GuardDetailsModal from './components/GuardDetailsModal';
 import GuardFormModal from './components/GuardFormModal';
-
 import {
   formatGuardDate,
   getEmptyGuardFormValues,

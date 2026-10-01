@@ -2,8 +2,8 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { INVALID_SESSION_MESSAGE, SESSION_COOKIE_NAME } from './auth.constants';
-import { SessionAuthGuard } from './session-auth.guard';
 import { SessionService } from './session.service';
+import { SessionAuthGuard } from './session-auth.guard';
 
 describe('SessionAuthGuard', () => {
   let guard: SessionAuthGuard;

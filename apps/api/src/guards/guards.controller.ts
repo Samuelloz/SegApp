@@ -1,11 +1,4 @@
 import {
-  createGuardSchema,
-  rolesFor,
-  updateGuardSchema,
-  updateActiveStatusSchema,
-} from '@segapp/contracts';
-
-import {
   BadRequestException,
   Body,
   Controller,
@@ -15,6 +8,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+
+import {
+  createGuardSchema,
+  rolesFor,
+  updateActiveStatusSchema,
+  updateGuardSchema,
+} from '@segapp/contracts';
 
 import { CurrentCompanyId } from '../auth/current-company-id.decorator';
 import { Roles } from '../auth/roles.decorator';

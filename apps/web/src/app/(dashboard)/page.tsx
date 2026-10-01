@@ -1,8 +1,9 @@
 'use client';
 
-import { hasPermission } from '@segapp/contracts';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+
+import { hasPermission } from '@segapp/contracts';
 
 import { useGetCurrentSessionQuery } from '@/store/api';
 

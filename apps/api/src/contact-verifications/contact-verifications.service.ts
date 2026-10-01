@@ -1,7 +1,8 @@
-import { type InvitationDeliveryChannel, type Prisma } from '@prisma/client';
-import { contactVerificationTokenSchema } from '@segapp/contracts';
-import { BadRequestException, Injectable } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { type InvitationDeliveryChannel, type Prisma } from '@prisma/client';
+
+import { contactVerificationTokenSchema } from '@segapp/contracts';
 
 import { PrismaService } from '../prisma/prisma.service';
 

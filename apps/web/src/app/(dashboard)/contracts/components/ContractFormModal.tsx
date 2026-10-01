@@ -1,10 +1,12 @@
 import { useId, useState } from 'react';
+
 import type { ContractFormValues } from '@segapp/contracts';
 
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 
 import ContractForm from './ContractForm';
+
 import styles from './ContractForm.module.css';
 
 type ContractFormModalProps = {

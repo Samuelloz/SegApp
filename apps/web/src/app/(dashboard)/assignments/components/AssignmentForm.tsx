@@ -1,21 +1,22 @@
 'use client';
 
-import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import DatePicker from 'react-datepicker';
+import { Controller, useForm } from 'react-hook-form';
+import Select from 'react-select';
+
 import {
   assignmentFormSchema,
   type AssignmentFormValues,
 } from '@segapp/contracts';
-import Select from 'react-select';
-import DatePicker from 'react-datepicker';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 import Button from '@/components/ui/Button';
 
 import {
-  getAssignmentSelectStyles,
   type AssignmentSelectOption,
+  getAssignmentSelectStyles,
 } from '../assignment-select.styles';
 
 import datePickerStyles from '../assignments.module.css';

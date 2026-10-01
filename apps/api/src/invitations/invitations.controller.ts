@@ -1,4 +1,3 @@
-import type { Response } from 'express';
 import {
   BadRequestException,
   Body,
@@ -13,21 +12,23 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 
-import { InvitationsService } from './invitations.service';
-import {
-  type AuthenticatedRequest,
-  SessionAuthGuard,
-} from '../auth/session-auth.guard';
-import { RolesGuard } from '../auth/roles.guard';
-import { Roles } from '../auth/roles.decorator';
-import { CurrentCompanyId } from '../auth/current-company-id.decorator';
-import { INVALID_SESSION_MESSAGE } from '../auth/auth.constants';
 import {
   acceptInvitationSchema,
   createInvitationSchema,
   rolesFor,
 } from '@segapp/contracts';
+
+import { INVALID_SESSION_MESSAGE } from '../auth/auth.constants';
+import { CurrentCompanyId } from '../auth/current-company-id.decorator';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
+import {
+  type AuthenticatedRequest,
+  SessionAuthGuard,
+} from '../auth/session-auth.guard';
+import { InvitationsService } from './invitations.service';
 
 @Controller('invitations')
 export class InvitationsController {

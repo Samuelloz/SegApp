@@ -3,15 +3,24 @@
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
-
-import styles from './assignments.module.css';
-
 import {
-  hasPermission,
   type AssignmentFormValues,
   type GuardAssignment,
+  hasPermission,
 } from '@segapp/contracts';
+
+import Badge from '@/components/ui/Badge';
+import Card from '@/components/ui/Card';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import {
+  useCreateAssignmentMutation,
+  useEndAssignmentMutation,
+  useGetAssignmentListQuery,
+  useGetAssignmentsQuery,
+  useGetContractAssignmentOptionsQuery,
+  useGetCurrentSessionQuery,
+  useGetGuardAssignmentOptionsQuery,
+} from '@/store/api';
 
 import {
   formatAssignmentDate,
@@ -20,24 +29,12 @@ import {
   getAssignmentStatusTone,
   getCurrentTimestamp,
 } from './assignment.utils';
-
 import { type AssignmentSelectOption } from './assignment-select.styles';
-
-import Badge from '@/components/ui/Badge';
-import Card from '@/components/ui/Card';
 import AssignmentCard from './components/AssignmentCard';
-import EndAssignmentModal from './components/EndAssignmentModal';
 import AssignmentForm from './components/AssignmentForm';
+import EndAssignmentModal from './components/EndAssignmentModal';
 
-import {
-  useCreateAssignmentMutation,
-  useEndAssignmentMutation,
-  useGetAssignmentsQuery,
-  useGetAssignmentListQuery,
-  useGetContractAssignmentOptionsQuery,
-  useGetGuardAssignmentOptionsQuery,
-  useGetCurrentSessionQuery,
-} from '@/store/api';
+import styles from './assignments.module.css';
 
 export default function AssignmentsPage() {
   const { data: session } = useGetCurrentSessionQuery();

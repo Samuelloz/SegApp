@@ -1,8 +1,8 @@
 import {
+  type CountryCode,
   getCountryCallingCode,
   isValidPhoneNumber,
   parseDigits,
-  type CountryCode,
 } from 'libphonenumber-js/min';
 
 export function buildE164PhoneNumber(

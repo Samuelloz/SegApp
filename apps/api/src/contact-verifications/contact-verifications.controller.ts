@@ -1,4 +1,3 @@
-import { verifyContactSchema } from '@segapp/contracts';
 import {
   BadRequestException,
   Body,
@@ -9,6 +8,8 @@ import {
   Res,
 } from '@nestjs/common';
 import type { Response } from 'express';
+
+import { verifyContactSchema } from '@segapp/contracts';
 
 import { ContactVerificationsService } from './contact-verifications.service';
 

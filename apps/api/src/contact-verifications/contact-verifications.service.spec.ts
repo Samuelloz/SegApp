@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-
 import type { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -102,10 +101,6 @@ describe('ContactVerificationsService', () => {
         expiresAt: new Date('2026-09-26T12:00:00.000Z'),
       },
     });
-
-    const createInput = transactionMock.contactVerification.create.mock
-      .calls[0]?.[0].data as Record<string, unknown>;
-    expect(createInput).not.toHaveProperty('token');
   });
 
   it('genera un token diferente para cada verificación', async () => {

@@ -1,9 +1,9 @@
 'use client';
 
+import { Menu } from 'lucide-react';
 import Link from 'next/link';
 
 import { useGetCurrentSessionQuery } from '@/store/api';
-import { Menu } from 'lucide-react';
 
 import styles from './MobileHeader.module.css';
 

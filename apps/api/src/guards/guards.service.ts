@@ -1,12 +1,12 @@
-import type { CreateGuardInput, UpdateGuardInput } from '@segapp/contracts';
-
 import {
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-
 import { Prisma } from '@prisma/client';
+
+import type { CreateGuardInput, UpdateGuardInput } from '@segapp/contracts';
+
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()

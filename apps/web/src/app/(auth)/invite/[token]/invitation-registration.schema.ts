@@ -1,5 +1,6 @@
-import { acceptInvitationSchema, userPasswordSchema } from '@segapp/contracts';
 import { z } from 'zod';
+
+import { acceptInvitationSchema, userPasswordSchema } from '@segapp/contracts';
 
 export const invitationRegistrationSchema = acceptInvitationSchema
   .pick({

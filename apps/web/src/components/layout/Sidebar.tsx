@@ -1,8 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import {
   ChevronDown,
   LogOut,
@@ -10,7 +7,11 @@ import {
   PanelLeftOpen,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { toast } from 'sonner';
+
 import { hasPermission } from '@segapp/contracts';
 
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
@@ -28,6 +29,14 @@ type SidebarProps = {
   onToggleCollapse: () => void;
 };
 
+// Grupo del menú que corresponde a la ruta, o undefined si ninguno coincide.
+function getActiveGroup(pathName: string): string | undefined {
+  if (pathName.startsWith('/settings')) return '/settings';
+
+  return MAIN_NAVIGATION_ITEMS.find((item) => pathName.startsWith(item.href))
+    ?.href;
+}
+
 export default function Sidebar({
   open,
   collapsed,
@@ -37,8 +46,13 @@ export default function Sidebar({
   const pathName = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
-  const [usersExpanded, setUsersExpanded] = useState(false);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(
+    () => getActiveGroup(pathName) ?? null,
+  );
+  const [usersExpanded, setUsersExpanded] = useState(() =>
+    pathName.startsWith('/settings/users'),
+  );
+  const [syncedPathName, setSyncedPathName] = useState(pathName);
 
   const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
@@ -51,18 +65,17 @@ export default function Sidebar({
   const SettingsIcon = SETTINGS_NAVIGATION_ITEM.icon;
   const CollapseIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
 
-  useEffect(() => {
-    if (pathName.startsWith('/settings')) {
-      setExpandedGroup('/settings');
-      setUsersExpanded(pathName.startsWith('/settings/users'));
-      return;
-    }
+  // Al cambiar de ruta, abrir el grupo que le corresponde. Se ajusta durante
+  // el render, no en un efecto, para no pintar antes el menú con el grupo viejo.
+  if (pathName !== syncedPathName) {
+    setSyncedPathName(pathName);
 
-    const activeItem = MAIN_NAVIGATION_ITEMS.find((item) =>
-      pathName.startsWith(item.href),
-    );
-    if (activeItem) setExpandedGroup(activeItem.href);
-  }, [pathName]);
+    const activeGroup = getActiveGroup(pathName);
+    if (activeGroup) setExpandedGroup(activeGroup);
+    if (activeGroup === '/settings') {
+      setUsersExpanded(pathName.startsWith('/settings/users'));
+    }
+  }
 
   function toggleGroup(href: string) {
     if (collapsed) {

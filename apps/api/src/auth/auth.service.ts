@@ -1,5 +1,4 @@
 import { randomBytes } from 'node:crypto';
-
 import {
   ForbiddenException,
   Injectable,
