@@ -1,11 +1,11 @@
 'use client';
 
 import {
+  type CountryCode,
   formatIncompletePhoneNumber,
   getCountries,
   getCountryCallingCode,
   parseDigits,
-  type CountryCode,
 } from 'libphonenumber-js/min';
 import { useMemo, useState } from 'react';
 import Select from 'react-select';
@@ -16,7 +16,8 @@ import {
 } from '@/lib/phone-number';
 
 import Input from './Input';
-import { getSelectStyles, type AppSelectOption } from './select.styles';
+import { type AppSelectOption, getSelectStyles } from './select.styles';
+
 import styles from './InternationalPhoneField.module.css';
 
 type Props = {

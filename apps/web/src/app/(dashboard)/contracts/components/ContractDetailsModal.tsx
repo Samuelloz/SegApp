@@ -1,8 +1,8 @@
 import type { Contract } from '@segapp/contracts';
 
-import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 
 import { formatContractDate, getContractAddress } from '../contract.utils';
 

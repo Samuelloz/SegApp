@@ -1,8 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 import Button from '@/components/ui/Button';
 import { useGetCurrentSessionQuery } from '@/store/api';

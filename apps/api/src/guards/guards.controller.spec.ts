@@ -1,8 +1,9 @@
-import type { MembershipRole } from '@segapp/contracts';
 import { BadRequestException } from '@nestjs/common';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import type { MembershipRole } from '@segapp/contracts';
 
 import { ROLES_KEY } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';

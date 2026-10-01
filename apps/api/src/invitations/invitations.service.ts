@@ -1,18 +1,17 @@
 import { createHash, randomBytes } from 'node:crypto';
-
 import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { Prisma, type Invitation } from '@prisma/client';
+import { type Invitation, Prisma } from '@prisma/client';
 
 import {
-  acceptInvitationSchema,
-  createInvitationSchema,
   type AcceptInvitationInput,
+  acceptInvitationSchema,
   type CreateInvitationInput,
+  createInvitationSchema,
 } from '@segapp/contracts';
 
 import { PasswordService } from '../auth/password.service';

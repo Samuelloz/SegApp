@@ -1,7 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
 import {
-  AcceptInvitationResponse,
   AcceptInvitationInput,
+  AcceptInvitationResponse,
   AssignmentListItem,
   Company,
   CompanyUserResponse,
@@ -16,15 +17,15 @@ import {
   CurrentSessionResponse,
   EndAssignmentInput,
   Guard,
-  GuardAssignmentOption,
   GuardAssignment,
+  GuardAssignmentOption,
   GuardListItem,
   InvitationPreview,
   LoginInput,
+  UpdateActiveStatusInput,
   UpdateCompanyInput,
   UpdateContractInput,
   UpdateGuardInput,
-  UpdateActiveStatusInput,
   VerifyContactInput,
   VerifyContactResponse,
 } from '@segapp/contracts';

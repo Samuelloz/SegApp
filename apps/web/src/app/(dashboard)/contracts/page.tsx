@@ -4,34 +4,32 @@ import { type ChangeEvent, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import {
-  hasPermission,
   type Contract,
   type ContractFormValues,
+  hasPermission,
 } from '@segapp/contracts';
-
-import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
-import {
-  useGetContractsQuery,
-  useGetContractListQuery,
-  useGetCurrentSessionQuery,
-  useCreateContractMutation,
-  useUpdateContractMutation,
-  useUpdateContractStatusMutation,
-} from '@/store/api';
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
+import { getApiErrorMessage } from '@/lib/getApiErrorMessage';
+import {
+  useCreateContractMutation,
+  useGetContractListQuery,
+  useGetContractsQuery,
+  useGetCurrentSessionQuery,
+  useUpdateContractMutation,
+  useUpdateContractStatusMutation,
+} from '@/store/api';
 
 import ContractCard from './components/ContractCard';
 import ContractDetailsModal from './components/ContractDetailsModal';
 import ContractFormModal from './components/ContractFormModal';
-
 import {
+  contractToFormValues,
   formatContractDate,
   getEmptyContractFormValues,
-  contractToFormValues,
   matchesContractSearch,
 } from './contract.utils';
 

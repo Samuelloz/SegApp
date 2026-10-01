@@ -1,7 +1,8 @@
-import type { MembershipRole } from '@segapp/contracts';
 import { Reflector } from '@nestjs/core';
 
-import { ROLES_KEY, Roles } from './roles.decorator';
+import type { MembershipRole } from '@segapp/contracts';
+
+import { Roles, ROLES_KEY } from './roles.decorator';
 
 describe('Roles', () => {
   const reflector = new Reflector();

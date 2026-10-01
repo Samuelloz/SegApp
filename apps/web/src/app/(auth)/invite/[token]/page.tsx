@@ -15,9 +15,10 @@ import {
 } from '@/store/api';
 
 import {
-  invitationRegistrationSchema,
   type InvitationRegistrationInput,
+  invitationRegistrationSchema,
 } from './invitation-registration.schema';
+
 import styles from './invite.module.css';
 
 export default function InvitationPage() {

@@ -3,8 +3,10 @@ import 'country-flag-icons/3x2/flags.css';
 import 'react-datepicker/dist/react-datepicker.css';
 
 import type { Metadata } from 'next';
-import Providers from './providers';
+
 import AppToaster from '@/components/ui/AppToaster';
+
+import Providers from './providers';
 
 export const metadata: Metadata = {
   title: {

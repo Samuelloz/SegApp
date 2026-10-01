@@ -1,10 +1,12 @@
 import { useId, useState } from 'react';
+
 import type { GuardFormValues } from '@segapp/contracts';
 
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 
 import GuardForm from './GuardForm';
+
 import styles from './GuardForm.module.css';
 
 type GuardFormModalProps = {

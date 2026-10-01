@@ -1,10 +1,11 @@
 import {
   BriefcaseBusiness,
   ClipboardCheck,
+  type LucideIcon,
   Settings,
   ShieldCheck,
-  type LucideIcon,
 } from 'lucide-react';
+
 import type { AppPermission } from '@segapp/contracts';
 
 type NavigationItem = {

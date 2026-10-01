@@ -1,8 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import {
   ChevronDown,
   LogOut,
@@ -10,7 +7,11 @@ import {
   PanelLeftOpen,
   X,
 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
 import { hasPermission } from '@segapp/contracts';
 
 import { getApiErrorMessage } from '@/lib/getApiErrorMessage';

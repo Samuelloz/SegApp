@@ -2,8 +2,8 @@
 
 import { type ReactNode, useEffect, useState } from 'react';
 
-import Sidebar from './Sidebar';
 import MobileHeader from './MobileHeader';
+import Sidebar from './Sidebar';
 
 import styles from './AppShell.module.css';
 

@@ -1,12 +1,12 @@
 import type { Guard } from '@segapp/contracts';
 
-import Modal from '@/components/ui/Modal';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 
 import {
-  formatGuardDate,
   calculateGuardAge,
+  formatGuardDate,
   getGuardAddress,
 } from '../guard.utils';
 

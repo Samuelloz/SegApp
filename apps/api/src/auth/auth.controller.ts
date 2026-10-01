@@ -1,5 +1,3 @@
-import { loginSchema } from '@segapp/contracts';
-
 import {
   BadRequestException,
   Body,
@@ -13,8 +11,9 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-
 import type { Response } from 'express';
+
+import { loginSchema } from '@segapp/contracts';
 
 import {
   INVALID_SESSION_MESSAGE,

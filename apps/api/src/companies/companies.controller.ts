@@ -1,5 +1,3 @@
-import { rolesFor, updateCompanySchema } from '@segapp/contracts';
-
 import {
   BadRequestException,
   Body,
@@ -8,6 +6,8 @@ import {
   Patch,
   UseGuards,
 } from '@nestjs/common';
+
+import { rolesFor, updateCompanySchema } from '@segapp/contracts';
 
 import { CurrentCompanyId } from '../auth/current-company-id.decorator';
 import { Roles } from '../auth/roles.decorator';

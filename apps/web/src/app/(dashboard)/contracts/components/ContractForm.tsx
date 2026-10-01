@@ -1,18 +1,18 @@
-import { useEffect, useRef } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format, parse } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useEffect, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { contractFormSchema, type ContractFormValues } from '@segapp/contracts';
 
-import Input from '@/components/ui/Input';
 import DatePickerHeader from '@/components/ui/DatePickerHeader';
-import DatePicker from 'react-datepicker';
-import { format, parse } from 'date-fns';
-import { es } from 'date-fns/locale';
-
-import styles from './ContractForm.module.css';
+import Input from '@/components/ui/Input';
 
 import { hasContractAddress } from '../contract.utils';
+
+import styles from './ContractForm.module.css';
 
 const MIN_CONTRACT_DATE = new Date(1900, 0, 1);
 const MAX_CONTRACT_DATE = new Date(2100, 11, 31);

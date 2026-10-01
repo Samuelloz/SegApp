@@ -1,9 +1,9 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+
 import type {
   CreateContractInput,
   UpdateContractInput,
 } from '@segapp/contracts';
-
-import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service';
 

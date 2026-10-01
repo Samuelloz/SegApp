@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 
 import {
   companySlugSchema,
-  loginSchema,
   type LoginInput,
+  loginSchema,
 } from '@segapp/contracts';
 
 import Button from '@/components/ui/Button';

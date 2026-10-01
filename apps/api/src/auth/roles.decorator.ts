@@ -1,5 +1,6 @@
-import type { MembershipRole } from '@segapp/contracts';
 import { SetMetadata } from '@nestjs/common';
+
+import type { MembershipRole } from '@segapp/contracts';
 
 export const ROLES_KEY = 'roles';
 

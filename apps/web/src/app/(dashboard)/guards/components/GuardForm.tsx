@@ -1,18 +1,18 @@
-import { useEffect, useRef } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { format, parse } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useEffect, useRef } from 'react';
+import DatePicker from 'react-datepicker';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { guardFormSchema, type GuardFormValues } from '@segapp/contracts';
 
-import Input from '@/components/ui/Input';
 import DatePickerHeader from '@/components/ui/DatePickerHeader';
-import DatePicker from 'react-datepicker';
-import { format, parse } from 'date-fns';
-import { es } from 'date-fns/locale';
-
-import styles from './GuardForm.module.css';
+import Input from '@/components/ui/Input';
 
 import { calculateGuardAge, hasGuardAddress } from '../guard.utils';
+
+import styles from './GuardForm.module.css';
 
 const MIN_GUARD_DATE = new Date(1900, 0, 1);
 
